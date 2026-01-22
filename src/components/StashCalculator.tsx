@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useStash, StashBackup } from '@/hooks/useStash';
 import { items, itemTypes } from '@/data/items';
+import { ItemImage } from '@/components/ItemImage';
 import { toast } from 'sonner';
 
 type SortKey = 'name' | 'quantity' | 'value' | 'weight' | 'ratio';
@@ -223,6 +224,7 @@ export function StashCalculator() {
                 <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr>
+                      <th className="w-16 p-3 text-sm font-semibold text-muted-foreground">Image</th>
                       <th 
                         className="text-left p-3 text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground"
                         onClick={() => handleSort('name')}
@@ -260,7 +262,7 @@ export function StashCalculator() {
                   <tbody>
                     {sortedStashItems.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="text-center py-12 text-muted-foreground">
+                        <td colSpan={8} className="text-center py-12 text-muted-foreground">
                           <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
                           <p>Your stash is empty. Add some items!</p>
                         </td>
@@ -268,6 +270,14 @@ export function StashCalculator() {
                     ) : (
                       sortedStashItems.map((stash) => (
                         <tr key={stash.itemId} className="border-t border-border hover:bg-muted/30 transition-colors">
+                          <td className="p-3">
+                            <ItemImage 
+                              src={stash.item.image} 
+                              alt={stash.item.name} 
+                              size="sm" 
+                              rarity={stash.item.rarity} 
+                            />
+                          </td>
                           <td className="p-3">
                             <div className="flex items-center gap-2">
                               <span className={`text-xs px-1.5 py-0.5 rounded border ${
