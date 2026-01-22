@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { items, itemTypes, rarities, Item } from '@/data/items';
+import { ItemImage } from '@/components/ItemImage';
 import { toast } from 'sonner';
-
 interface TierTableProps {
   onAddItem: (itemId: string, quantity: number) => void;
 }
@@ -183,6 +183,7 @@ export function TierTable({ onAddItem }: TierTableProps) {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="w-10 p-3"></th>
+                  <th className="w-16 p-3 text-sm font-semibold text-muted-foreground">Image</th>
                   <th 
                     className="text-left p-3 text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground"
                     onClick={() => handleSort('name')}
@@ -244,23 +245,33 @@ export function TierTable({ onAddItem }: TierTableProps) {
                         </button>
                       </td>
                       <td className="p-3">
-                        <div className="flex items-center gap-2">
+                        <ItemImage 
+                          src={item.image} 
+                          alt={item.name} 
+                          size="md" 
+                          rarity={item.rarity} 
+                        />
+                      </td>
+                      <td className="p-3">
+                        <div className="flex flex-col gap-1">
                           <span className="text-foreground font-medium">{item.name}</span>
-                          {isBestRatio && (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-success/20 text-success flex items-center gap-1">
-                              <Award className="w-3 h-3" /> Best Ratio
-                            </span>
-                          )}
-                          {isMostValuable && (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-primary/20 text-primary flex items-center gap-1">
-                              <Gem className="w-3 h-3" /> Valuable
-                            </span>
-                          )}
-                          {isHeaviest && (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-warning/20 text-warning flex items-center gap-1">
-                              <Scale className="w-3 h-3" /> Heaviest
-                            </span>
-                          )}
+                          <div className="flex flex-wrap gap-1">
+                            {isBestRatio && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-success/20 text-success flex items-center gap-1">
+                                <Award className="w-3 h-3" /> Best Ratio
+                              </span>
+                            )}
+                            {isMostValuable && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-primary/20 text-primary flex items-center gap-1">
+                                <Gem className="w-3 h-3" /> Valuable
+                              </span>
+                            )}
+                            {isHeaviest && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-warning/20 text-warning flex items-center gap-1">
+                                <Scale className="w-3 h-3" /> Heaviest
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="p-3 text-muted-foreground hidden sm:table-cell">

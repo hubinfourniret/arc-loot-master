@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLoadout } from '@/hooks/useLoadout';
 import { items } from '@/data/items';
+import { ItemImage } from '@/components/ItemImage';
 import { toast } from 'sonner';
 
 export function LoadoutOptimizer() {
@@ -102,18 +103,12 @@ export function LoadoutOptimizer() {
               {slots.map((slot) => (
                 <div key={slot.slotId} className="card-tactical rounded-lg p-4">
                   <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 bg-muted rounded-lg border border-border flex items-center justify-center flex-shrink-0">
-                      {slot.item ? (
-                        <span className={`text-2xl font-bold ${
-                          slot.item.rarity === 'Legendary' ? 'text-yellow-400' :
-                          slot.item.rarity === 'Rare' ? 'text-primary' : 'text-muted-foreground'
-                        }`}>
-                          {slot.item.name.charAt(0)}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground text-2xl">?</span>
-                      )}
-                    </div>
+                    <ItemImage 
+                      src={slot.item?.image} 
+                      alt={slot.item?.name || 'Empty slot'} 
+                      size="lg" 
+                      rarity={slot.item?.rarity || 'Common'} 
+                    />
                     
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
