@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Save, Download, Upload, Copy, ChevronUp, ChevronDown, Package, Scale, Coins, Recycle, Hash } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { Plus, Trash2, Save, Download, Upload, Copy, ChevronUp, ChevronDown, Package, Scale, Coins, Recycle, Hash, FileDown, FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,6 +22,8 @@ export function StashCalculator() {
     getBackups,
     loadBackup,
     exportAsText,
+    exportToFile,
+    importFromFile,
     totalValue,
     totalWeight,
     valuePerWeight,
@@ -29,6 +31,8 @@ export function StashCalculator() {
     uniqueItems,
     valueByType,
   } = useStash();
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
@@ -110,6 +114,28 @@ export function StashCalculator() {
     const text = exportAsText();
     navigator.clipboard.writeText(text);
     toast.success('Stash copied to clipboard');
+  };
+
+  const handleExportFile = () => {
+    exportToFile();
+    toast.success('Stash exported to file');
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const success = await importFromFile(file);
+    if (success) {
+      toast.success('Stash imported successfully');
+    } else {
+      toast.error('Failed to import stash - invalid file format');
+    }
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const SortIcon = ({ column }: { column: SortKey }) => {
@@ -212,8 +238,21 @@ export function StashCalculator() {
                     </SelectContent>
                   </Select>
                   <Button variant="outline" size="sm" onClick={handleExport}>
-                    <Copy className="w-4 h-4 mr-1" /> Export
+                    <Copy className="w-4 h-4 mr-1" /> Copy
                   </Button>
+                  <Button variant="outline" size="sm" onClick={handleExportFile}>
+                    <FileDown className="w-4 h-4 mr-1" /> Export
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                    <FileUp className="w-4 h-4 mr-1" /> Import
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportFile}
+                    className="hidden"
+                  />
                   <Button variant="destructive" size="sm" onClick={clearAll}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
