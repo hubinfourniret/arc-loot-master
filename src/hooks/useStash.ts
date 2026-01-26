@@ -123,6 +123,43 @@ export function useStash() {
     return `=== Arc Raiders Stash ===\n${lines.join('\n')}\n\nTotal: ${total.toLocaleString()} coins\nWeight: ${weight.toFixed(1)}kg\nRatio: ${(total / weight).toFixed(2)} coins/kg`;
   }, [stashItems]);
 
+  const exportToFile = useCallback(() => {
+    const data = stashItems.map(({ itemId, quantity }) => ({ itemId, quantity }));
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `arc-raiders-stash-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [stashItems]);
+
+  const importFromFile = useCallback((file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target?.result as string);
+          if (Array.isArray(data)) {
+            const validItems = data.filter((s: any) => s.itemId && typeof s.quantity === 'number' && getItemById(s.itemId));
+            setStashItems(validItems.map((s: any) => ({
+              itemId: s.itemId,
+              quantity: s.quantity,
+              item: getItemById(s.itemId)!
+            })));
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        } catch {
+          resolve(false);
+        }
+      };
+      reader.onerror = () => resolve(false);
+      reader.readAsText(file);
+    });
+  }, []);
+
   // Calculations
   const totalValue = stashItems.reduce((sum, s) => sum + s.item.value * s.quantity, 0);
   const totalWeight = stashItems.reduce((sum, s) => sum + s.item.weight * s.quantity, 0);
@@ -145,6 +182,8 @@ export function useStash() {
     getBackups,
     loadBackup,
     exportAsText,
+    exportToFile,
+    importFromFile,
     totalValue,
     totalWeight,
     valuePerWeight,
