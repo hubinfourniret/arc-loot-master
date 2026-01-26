@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLoadout } from '@/hooks/useLoadout';
-import { items } from '@/data/items';
+import { allItems } from '@/data/items';
 import { ItemImage } from '@/components/ItemImage';
 import { toast } from 'sonner';
 
@@ -60,9 +60,9 @@ export function LoadoutOptimizer() {
 
   const getItemsForSlot = (slotType: string) => {
     if (slotType === 'Consumables') {
-      return items.filter(i => i.type === 'Consumables' || i.type === 'Ammo');
+      return allItems.filter(i => i.type === 'Consumables' || i.type === 'Ammo');
     }
-    return items.filter(i => i.type === slotType);
+    return allItems.filter(i => i.type === slotType);
   };
 
   return (

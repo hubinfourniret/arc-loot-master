@@ -5,7 +5,7 @@ interface ItemImageProps {
   src?: string;
   alt: string;
   size?: 'sm' | 'md' | 'lg';
-  rarity?: 'Common' | 'Rare' | 'Legendary';
+  rarity?: 'Common' |'Uncommon'| 'Rare' | 'Epic' | 'Legendary';
   className?: string;
 }
 
@@ -21,11 +21,15 @@ export function ItemImage({ src, alt, size = 'md', rarity = 'Common', className 
   const borderColor = 
     rarity === 'Legendary' ? 'border-yellow-500/50' :
     rarity === 'Rare' ? 'border-primary/50' : 
+    rarity === 'Epic' ? 'border-purple/50' :
+    rarity === 'Uncommon' ? 'border-green/50' :
     'border-border';
 
   const bgColor =
     rarity === 'Legendary' ? 'bg-yellow-500/10' :
     rarity === 'Rare' ? 'bg-primary/10' :
+    rarity === 'Epic' ? 'bg-purple-500/10' :
+    rarity === 'Uncommon' ? 'bg-green-500/10' :
     'bg-muted';
 
   if (!src || hasError) {

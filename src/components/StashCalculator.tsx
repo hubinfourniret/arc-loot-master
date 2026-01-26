@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useStash, StashBackup } from '@/hooks/useStash';
-import { items, itemTypes } from '@/data/items';
+import { allItems, itemTypes } from '@/data/items';
 import { ItemImage } from '@/components/ItemImage';
 import { toast } from 'sonner';
 
@@ -42,7 +42,7 @@ export function StashCalculator() {
   const [backups, setBackups] = useState<StashBackup[]>([]);
 
   const filteredItems = useMemo(() => {
-    return items.filter(item =>
+    return allItems.filter(item =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.type.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -143,7 +143,7 @@ export function StashCalculator() {
     return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
   };
 
-  const weightPercent = (totalWeight / 150) * 100;
+  const weightPercent = (totalWeight / 90) * 100;
   const weightColor = weightPercent > 100 ? 'bg-destructive' : weightPercent > 80 ? 'bg-warning' : 'bg-success';
 
   return (
@@ -185,6 +185,7 @@ export function StashCalculator() {
                             <span className={`text-xs px-1.5 py-0.5 rounded ${
                               item.rarity === 'Legendary' ? 'bg-yellow-500/20 text-yellow-400' :
                               item.rarity === 'Rare' ? 'bg-primary/20 text-primary' :
+                              item.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400' :
                               'bg-muted-foreground/20 text-muted-foreground'
                             }`}>
                               {item.type.slice(0, 4)}
@@ -393,7 +394,7 @@ export function StashCalculator() {
                     <span className="text-sm">Total Weight</span>
                   </div>
                   <span className="font-mono text-foreground">
-                    {totalWeight.toFixed(1)} / 150kg
+                    {totalWeight.toFixed(1)}
                   </span>
                 </div>
                 <div className="progress-tactical h-3 rounded">

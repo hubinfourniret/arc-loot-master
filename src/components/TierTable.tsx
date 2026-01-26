@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { items, itemTypes, rarities, Item } from '@/data/items';
+import { allItems, itemTypes, rarities } from '@/data/items';
 import { ItemImage } from '@/components/ItemImage';
 import { toast } from 'sonner';
 interface TierTableProps {
@@ -17,7 +17,7 @@ type SortDirection = 'asc' | 'desc';
 export function TierTable({ onAddItem }: TierTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [rarityFilters, setRarityFilters] = useState<string[]>(['Common', 'Rare', 'Legendary']);
+  const [rarityFilters, setRarityFilters] = useState<string[]>(['Common','Uncommon', 'Rare', 'Epic', 'Legendary']);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [sortKey, setSortKey] = useState<SortKey>('value');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -52,7 +52,7 @@ export function TierTable({ onAddItem }: TierTableProps) {
   };
 
   const filteredAndSortedItems = useMemo(() => {
-    let filtered = items.filter(item => {
+    const filtered = allItems.filter(item => {
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            item.type.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = typeFilter === 'all' || item.type === typeFilter;
@@ -85,16 +85,16 @@ export function TierTable({ onAddItem }: TierTableProps) {
           bVal = b.value / b.weight;
           break;
         case 'rarity':
-          const rarityOrder = { 'Common': 0, 'Rare': 1, 'Legendary': 2 };
+          { const rarityOrder = { 'Common': 0, "Uncommon": 1,'Rare': 2, 'Epic': 3, 'Legendary': 4 };
           aVal = rarityOrder[a.rarity];
           bVal = rarityOrder[b.rarity];
-          break;
+          break; }
         default:
           return 0;
       }
       return sortDirection === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
     });
-  }, [items, searchTerm, typeFilter, rarityFilters, favorites, sortKey, sortDirection]);
+  }, [allItems, searchTerm, typeFilter, rarityFilters, favorites, sortKey, sortDirection]);
 
   const SortIcon = ({ column }: { column: SortKey }) => {
     if (sortKey !== column) return null;
@@ -102,20 +102,15 @@ export function TierTable({ onAddItem }: TierTableProps) {
   };
 
   // Find special items
-  const bestRatioItem = items.reduce((best, item) => 
+  const bestRatioItem = allItems.reduce((best, item) =>
     (item.value / item.weight) > (best.value / best.weight) ? item : best
   );
-  const heaviestItem = items.reduce((heavy, item) => 
+  const heaviestItem = allItems.reduce((heavy, item) =>
     item.weight > heavy.weight ? item : heavy
   );
-  const mostValuable = items.reduce((val, item) => 
+  const mostValuable = allItems.reduce((val, item) =>
     item.value > val.value ? item : val
   );
-
-  const handleQuickAdd = (item: Item) => {
-    onAddItem(item.id, 1);
-    toast.success(`Added ${item.name} to stash`);
-  };
 
   return (
     <section id="tier-table" className="py-12">
@@ -166,7 +161,9 @@ export function TierTable({ onAddItem }: TierTableProps) {
                   />
                   <span className={`text-sm ${
                     rarity === 'Legendary' ? 'text-yellow-400' :
-                    rarity === 'Rare' ? 'text-primary' : 'text-muted-foreground'
+                    rarity === 'Rare' ? 'text-primary' : 
+                    rarity === 'Epic' ? 'text-purple-400' :
+                    rarity === 'Uncommon' ? 'text-green-400' : 'text-muted-foreground'
                   }`}>
                     {rarity}
                   </span>
@@ -249,7 +246,7 @@ export function TierTable({ onAddItem }: TierTableProps) {
                       </td>
                       <td className="p-3">
                         <ItemImage 
-                          src={item.image} 
+                          src={item?.imageUrl}
                           alt={item.name} 
                           size="md" 
                           rarity={item.rarity} 
@@ -293,6 +290,8 @@ export function TierTable({ onAddItem }: TierTableProps) {
                         <span className={`text-xs px-2 py-1 rounded border ${
                           item.rarity === 'Legendary' ? 'rarity-legendary bg-yellow-500/10' :
                           item.rarity === 'Rare' ? 'rarity-rare bg-primary/10' :
+                          item.rarity === 'Epic' ? 'rarity-epic bg-purple-500/10' :
+                          item.rarity === 'Uncommon' ? 'rarity-uncommon bg-green-500/10' :
                           'rarity-common bg-muted'
                         }`}>
                           {item.rarity}
@@ -300,16 +299,6 @@ export function TierTable({ onAddItem }: TierTableProps) {
                       </td>
                       <td className="p-3 text-muted-foreground text-sm hidden xl:table-cell">
                         {item.canBeFoundIn || '—'}
-                      </td>
-                      <td className="p-3 text-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleQuickAdd(item)}
-                          className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/20"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
                       </td>
                     </tr>
                   );
@@ -319,7 +308,7 @@ export function TierTable({ onAddItem }: TierTableProps) {
           </div>
           
           <div className="p-4 border-t border-border text-sm text-muted-foreground">
-            Showing {filteredAndSortedItems.length} of {items.length} items
+            Showing {filteredAndSortedItems.length} of {allItems.length} items
           </div>
         </div>
       </div>
