@@ -8,6 +8,7 @@ export interface Item {
   dps?: number;
   description: string;
   image?: string;
+  canBeFoundIn?: string;
 }
 
 export const items: Item[] = [

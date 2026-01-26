@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Plus, Star, ChevronUp, ChevronDown, Award, Scale, Gem } from 'lucide-react';
+import { Search, Filter, Plus, Star, ChevronUp, ChevronDown, Award, Scale, Gem, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -217,6 +217,9 @@ export function TierTable({ onAddItem }: TierTableProps) {
                   >
                     <span className="flex items-center justify-center gap-1">Rarity <SortIcon column="rarity" /></span>
                   </th>
+                  <th className="text-left p-3 text-sm font-semibold text-muted-foreground hidden xl:table-cell">
+                    <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> Location</span>
+                  </th>
                   <th className="w-16 p-3"></th>
                 </tr>
               </thead>
@@ -294,6 +297,9 @@ export function TierTable({ onAddItem }: TierTableProps) {
                         }`}>
                           {item.rarity}
                         </span>
+                      </td>
+                      <td className="p-3 text-muted-foreground text-sm hidden xl:table-cell">
+                        {item.canBeFoundIn || '—'}
                       </td>
                       <td className="p-3 text-center">
                         <Button
