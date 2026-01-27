@@ -1,21 +1,25 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Check, Plus, Search } from 'lucide-react';
-import { allItems, BaseItem } from '@/data/items';
+import { Plus, Search } from 'lucide-react';
+import { allItems, BaseItem, WeaponLevel } from '@/data/items';
 import { ItemImage } from '@/components/ItemImage';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 interface ItemSearchComboboxProps {
-  onAddItem: (itemId: string, quantity: number) => void;
+  onAddItem: (itemId: string, quantity: number, weaponLevel?: WeaponLevel) => void;
 }
+
+const WEAPON_LEVELS: WeaponLevel[] = [1, 2, 3, 4];
 
 export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [weaponLevels, setWeaponLevels] = useState<Record<string, WeaponLevel>>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -73,13 +77,18 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
 
   const handleQuickAdd = (item: BaseItem) => {
     const qty = quantities[item.id] || 1;
-    onAddItem(item.id, qty);
+    const level = item.type === 'Weapons' ? (weaponLevels[item.id] || 1) : undefined;
+    onAddItem(item.id, qty, level);
     // Reset quantity after adding
     setQuantities(prev => ({ ...prev, [item.id]: 1 }));
   };
 
   const updateQuantity = (itemId: string, value: number) => {
     setQuantities(prev => ({ ...prev, [itemId]: Math.max(1, value) }));
+  };
+
+  const updateWeaponLevel = (itemId: string, level: WeaponLevel) => {
+    setWeaponLevels(prev => ({ ...prev, [itemId]: level }));
   };
 
   const getRarityStyles = (rarity: string) => {
@@ -95,6 +104,16 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
       default:
         return 'border-border bg-muted/30';
     }
+  };
+
+  // Calculate displayed value based on level for weapons
+  const getDisplayedValue = (item: BaseItem): number => {
+    if (item.type === 'Weapons') {
+      const level = weaponLevels[item.id] || 1;
+      const multipliers = { 1: 1.0, 2: 1.5, 3: 2.0, 4: 2.5 };
+      return Math.round(item.value * multipliers[level]);
+    }
+    return item.value;
   };
 
   return (
@@ -127,75 +146,110 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
               </div>
             ) : (
               <div className="p-2 space-y-1">
-                {filteredItems.map((item, index) => (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      "flex items-center gap-3 p-2 rounded-lg border transition-all cursor-pointer",
-                      getRarityStyles(item.rarity),
-                      index === selectedIndex && "ring-2 ring-primary",
-                      "hover:bg-accent/50"
-                    )}
-                    onClick={() => setSelectedIndex(index)}
-                  >
-                    {/* Item Image */}
-                    <ItemImage
-                      src={item.imageUrl}
-                      alt={item.name}
-                      size="md"
-                      rarity={item.rarity}
-                    />
-
-                    {/* Item Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground truncate">
-                          {item.name}
-                        </span>
-                        <span className={cn(
-                          "text-xs px-1.5 py-0.5 rounded shrink-0",
-                          item.rarity === 'Legendary' && 'bg-yellow-500/20 text-yellow-400',
-                          item.rarity === 'Epic' && 'bg-purple-500/20 text-purple-400',
-                          item.rarity === 'Rare' && 'bg-primary/20 text-primary',
-                          item.rarity === 'Uncommon' && 'bg-green-500/20 text-green-400',
-                          item.rarity === 'Common' && 'bg-muted-foreground/20 text-muted-foreground'
-                        )}>
-                          {item.rarity}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <span>{item.type}</span>
-                        <span className="text-primary font-mono">{item.value}c</span>
-                        <span className="font-mono">{item.weight}kg</span>
-                      </div>
-                    </div>
-
-                    {/* Quantity & Add */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Input
-                        type="number"
-                        min={1}
-                        value={quantities[item.id] || 1}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          updateQuantity(item.id, parseInt(e.target.value) || 1);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-16 h-8 text-center bg-background border-border"
+                {filteredItems.map((item, index) => {
+                  const isWeapon = item.type === 'Weapons';
+                  const currentLevel = weaponLevels[item.id] || 1;
+                  const displayedValue = getDisplayedValue(item);
+                  
+                  return (
+                    <div
+                      key={item.id}
+                      className={cn(
+                        "flex items-center gap-3 p-2 rounded-lg border transition-all cursor-pointer",
+                        getRarityStyles(item.rarity),
+                        index === selectedIndex && "ring-2 ring-primary",
+                        "hover:bg-accent/50"
+                      )}
+                      onClick={() => setSelectedIndex(index)}
+                    >
+                      {/* Item Image */}
+                      <ItemImage
+                        src={item.imageUrl}
+                        alt={item.name}
+                        size="md"
+                        rarity={item.rarity}
                       />
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleQuickAdd(item);
-                        }}
-                        className="h-8 bg-primary text-primary-foreground hover:bg-primary/90"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
+
+                      {/* Item Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground truncate">
+                            {item.name}
+                          </span>
+                          <span className={cn(
+                            "text-xs px-1.5 py-0.5 rounded shrink-0",
+                            item.rarity === 'Legendary' && 'bg-yellow-500/20 text-yellow-400',
+                            item.rarity === 'Epic' && 'bg-purple-500/20 text-purple-400',
+                            item.rarity === 'Rare' && 'bg-primary/20 text-primary',
+                            item.rarity === 'Uncommon' && 'bg-green-500/20 text-green-400',
+                            item.rarity === 'Common' && 'bg-muted-foreground/20 text-muted-foreground'
+                          )}>
+                            {item.rarity}
+                          </span>
+                          {isWeapon && (
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-accent text-accent-foreground shrink-0">
+                              Lvl {currentLevel}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <span>{item.type}</span>
+                          <span className="text-primary font-mono">{displayedValue}c</span>
+                          <span className="font-mono">{item.weight}kg</span>
+                        </div>
+                      </div>
+
+                      {/* Weapon Level Selector */}
+                      {isWeapon && (
+                        <Select
+                          value={currentLevel.toString()}
+                          onValueChange={(val) => {
+                            updateWeaponLevel(item.id, parseInt(val) as WeaponLevel);
+                          }}
+                        >
+                          <SelectTrigger 
+                            className="w-20 h-8 bg-background border-border"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <SelectValue placeholder="Lvl" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover border-border z-[60]">
+                            {WEAPON_LEVELS.map((level) => (
+                              <SelectItem key={level} value={level.toString()}>
+                                Lvl {level}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+
+                      {/* Quantity & Add */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Input
+                          type="number"
+                          min={1}
+                          value={quantities[item.id] || 1}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            updateQuantity(item.id, parseInt(e.target.value) || 1);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-16 h-8 text-center bg-background border-border"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuickAdd(item);
+                          }}
+                          className="h-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollArea>

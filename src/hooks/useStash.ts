@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Item, getItemById } from '@/data/items';
+import { Item, getItemById, WeaponLevel, getWeaponValueAtLevel } from '@/data/items';
 
 export interface StashItem {
   itemId: string;
   quantity: number;
   item: Item;
+  weaponLevel?: WeaponLevel; // Only for weapons
 }
 
 export interface StashBackup {
@@ -16,6 +17,14 @@ export interface StashBackup {
 
 const STASH_KEY = 'arcraiders_stash';
 const BACKUPS_KEY = 'arcraiders_stash_backups';
+
+// Helper to calculate effective value considering weapon level
+export const getEffectiveValue = (stashItem: StashItem): number => {
+  if (stashItem.item.type === 'Weapons' && stashItem.weaponLevel) {
+    return getWeaponValueAtLevel(stashItem.item.value, stashItem.weaponLevel);
+  }
+  return stashItem.item.value;
+};
 
 export function useStash() {
   const [stashItems, setStashItems] = useState<StashItem[]>([]);
@@ -39,39 +48,68 @@ export function useStash() {
 
   // Save to localStorage on change
   useEffect(() => {
-    const toSave = stashItems.map(({ itemId, quantity }) => ({ itemId, quantity }));
+    const toSave = stashItems.map(({ itemId, quantity, weaponLevel }) => ({ 
+      itemId, 
+      quantity,
+      ...(weaponLevel && { weaponLevel })
+    }));
     localStorage.setItem(STASH_KEY, JSON.stringify(toSave));
   }, [stashItems]);
 
-  const addItem = useCallback((itemId: string, quantity: number = 1) => {
+  const addItem = useCallback((itemId: string, quantity: number = 1, weaponLevel?: WeaponLevel) => {
     const item = getItemById(itemId);
     if (!item) return;
 
     setStashItems(prev => {
-      const existing = prev.find(s => s.itemId === itemId);
+      // For weapons, we need to check both itemId AND level
+      const existing = prev.find(s => 
+        s.itemId === itemId && 
+        (item.type !== 'Weapons' || s.weaponLevel === weaponLevel)
+      );
+      
       if (existing) {
         return prev.map(s => 
-          s.itemId === itemId 
+          s.itemId === itemId && (item.type !== 'Weapons' || s.weaponLevel === weaponLevel)
             ? { ...s, quantity: s.quantity + quantity }
             : s
         );
       }
-      return [...prev, { itemId, quantity, item }];
+      
+      return [...prev, { 
+        itemId, 
+        quantity, 
+        item,
+        ...(item.type === 'Weapons' && { weaponLevel: weaponLevel || 1 })
+      }];
     });
   }, []);
 
-  const updateQuantity = useCallback((itemId: string, quantity: number) => {
+  const updateQuantity = useCallback((itemId: string, quantity: number, weaponLevel?: WeaponLevel) => {
     if (quantity <= 0) {
-      removeItem(itemId);
+      removeItem(itemId, weaponLevel);
       return;
     }
     setStashItems(prev => 
-      prev.map(s => s.itemId === itemId ? { ...s, quantity } : s)
+      prev.map(s => {
+        if (s.itemId === itemId) {
+          // For weapons, also check level
+          if (s.item.type === 'Weapons' && s.weaponLevel !== weaponLevel) {
+            return s;
+          }
+          return { ...s, quantity };
+        }
+        return s;
+      })
     );
   }, []);
 
-  const removeItem = useCallback((itemId: string) => {
-    setStashItems(prev => prev.filter(s => s.itemId !== itemId));
+  const removeItem = useCallback((itemId: string, weaponLevel?: WeaponLevel) => {
+    setStashItems(prev => prev.filter(s => {
+      if (s.itemId !== itemId) return true;
+      // For weapons, also check level
+      if (s.item.type === 'Weapons' && s.weaponLevel !== weaponLevel) return true;
+      return false;
+    }));
   }, []);
 
   const clearAll = useCallback(() => {
@@ -114,17 +152,23 @@ export function useStash() {
   }, [getBackups]);
 
   const exportAsText = useCallback(() => {
-    const lines = stashItems.map(s => 
-      `${s.item.name} x${s.quantity} - ${s.item.value * s.quantity} coins (${s.item.weight * s.quantity}kg)`
-    );
-    const total = stashItems.reduce((sum, s) => sum + s.item.value * s.quantity, 0);
+    const lines = stashItems.map(s => {
+      const effectiveValue = getEffectiveValue(s);
+      const levelText = s.weaponLevel ? ` (Lvl ${s.weaponLevel})` : '';
+      return `${s.item.name}${levelText} x${s.quantity} - ${effectiveValue * s.quantity} coins (${s.item.weight * s.quantity}kg)`;
+    });
+    const total = stashItems.reduce((sum, s) => sum + getEffectiveValue(s) * s.quantity, 0);
     const weight = stashItems.reduce((sum, s) => sum + s.item.weight * s.quantity, 0);
     
     return `=== Arc Raiders Stash ===\n${lines.join('\n')}\n\nTotal: ${total.toLocaleString()} coins\nWeight: ${weight.toFixed(1)}kg\nRatio: ${(total / weight).toFixed(2)} coins/kg`;
   }, [stashItems]);
 
   const exportToFile = useCallback(() => {
-    const data = stashItems.map(({ itemId, quantity }) => ({ itemId, quantity }));
+    const data = stashItems.map(({ itemId, quantity, weaponLevel }) => ({ 
+      itemId, 
+      quantity,
+      ...(weaponLevel && { weaponLevel })
+    }));
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -145,6 +189,7 @@ export function useStash() {
             setStashItems(validItems.map((s: any) => ({
               itemId: s.itemId,
               quantity: s.quantity,
+              weaponLevel: s.weaponLevel,
               item: getItemById(s.itemId)!
             })));
             resolve(true);
@@ -160,15 +205,15 @@ export function useStash() {
     });
   }, []);
 
-  // Calculations
-  const totalValue = stashItems.reduce((sum, s) => sum + s.item.value * s.quantity, 0);
+  // Calculations - using effective value for weapons
+  const totalValue = stashItems.reduce((sum, s) => sum + getEffectiveValue(s) * s.quantity, 0);
   const totalWeight = stashItems.reduce((sum, s) => sum + s.item.weight * s.quantity, 0);
   const valuePerWeight = totalWeight > 0 ? totalValue / totalWeight : 0;
   const recycleValue = Math.floor(totalValue * 0.5);
   const uniqueItems = stashItems.length;
 
   const valueByType = stashItems.reduce((acc, s) => {
-    acc[s.item.type] = (acc[s.item.type] || 0) + s.item.value * s.quantity;
+    acc[s.item.type] = (acc[s.item.type] || 0) + getEffectiveValue(s) * s.quantity;
     return acc;
   }, {} as Record<string, number>);
 

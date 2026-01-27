@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { allItems, itemTypes, rarities } from '@/data/items';
+import { allItems, itemTypes, rarities, getWeaponValueAtLevel, WeaponLevel } from '@/data/items';
 import { ItemImage } from '@/components/ItemImage';
 import { toast } from 'sonner';
 interface TierTableProps {
@@ -194,7 +194,16 @@ export function TierTable({ onAddItem }: TierTableProps) {
                     className="text-right p-3 text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground"
                     onClick={() => handleSort('value')}
                   >
-                    <span className="flex items-center justify-end gap-1">Value <SortIcon column="value" /></span>
+                    <span className="flex items-center justify-end gap-1">Value (Lvl 1) <SortIcon column="value" /></span>
+                  </th>
+                  <th className="text-right p-3 text-sm font-semibold text-muted-foreground hidden md:table-cell">
+                    <span className="text-xs">Lvl 2</span>
+                  </th>
+                  <th className="text-right p-3 text-sm font-semibold text-muted-foreground hidden lg:table-cell">
+                    <span className="text-xs">Lvl 3</span>
+                  </th>
+                  <th className="text-right p-3 text-sm font-semibold text-muted-foreground hidden lg:table-cell">
+                    <span className="text-xs">Lvl 4</span>
                   </th>
                   <th 
                     className="text-right p-3 text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground hidden md:table-cell"
@@ -279,6 +288,16 @@ export function TierTable({ onAddItem }: TierTableProps) {
                       </td>
                       <td className="p-3 text-right text-primary font-mono font-bold">
                         {item.value.toLocaleString()}
+                      </td>
+                      {/* Weapon level values - only show for weapons */}
+                      <td className="p-3 text-right text-muted-foreground font-mono hidden md:table-cell">
+                        {item.type === 'Weapons' ? getWeaponValueAtLevel(item.value, 2).toLocaleString() : '—'}
+                      </td>
+                      <td className="p-3 text-right text-muted-foreground font-mono hidden lg:table-cell">
+                        {item.type === 'Weapons' ? getWeaponValueAtLevel(item.value, 3).toLocaleString() : '—'}
+                      </td>
+                      <td className="p-3 text-right text-muted-foreground font-mono hidden lg:table-cell">
+                        {item.type === 'Weapons' ? getWeaponValueAtLevel(item.value, 4).toLocaleString() : '—'}
                       </td>
                       <td className="p-3 text-right text-muted-foreground font-mono hidden md:table-cell">
                         {item.weight}kg
