@@ -1,4 +1,4 @@
-// scrape-arcraiders-complete.ts
+// scrape-arcraiders-weapons-complete.ts
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
@@ -23,6 +23,7 @@ interface WeaponRow {
     specialTrait: string;
     magazineSize: string;
     firingMode: string;
+    sellPrices: number[];
 }
 
 const BASE_URL = 'https://arcraiders.wiki';
@@ -33,8 +34,6 @@ const scrapeAllWeaponTables = async (page: puppeteer.Page): Promise<WeaponRow[]>
 
     const list = await page.evaluate(() => {
         const result: any[] = [];
-
-        // Récupérer TOUS les tableaux wikitable sortable
         const tables = document.querySelectorAll('table.wikitable.sortable.jquery-tablesorter');
 
         tables.forEach((table) => {
@@ -119,9 +118,10 @@ const scrapeWeaponPage = async (
             specialTrait: '',
             magazineSize: '',
             firingMode: '',
+            sellPrices: [],
         };
 
-        // 1) lignes data-tag (ammo, type, rarity)
+        // 1) Récupérer ammo, type, rarity depuis les lignes data-tag
         const tagRows = infobox.querySelectorAll('tr.data-tag');
         if (tagRows.length >= 1) {
             const ammoRow = tagRows[0];
@@ -141,60 +141,104 @@ const scrapeWeaponPage = async (
             data.rarity = rarityText.replace('Weapons', '').trim();
         }
 
-        // 2) poids via div.template-weight
-        const weightDiv = document.querySelector('div.template-weight');
-        const weightSpan = weightDiv?.querySelector('span:last-of-type');
-        const weightRaw = weightSpan?.textContent?.trim() || '0';
-        data.weight = parseFloat(weightRaw);
-
-        // 3) stats (lignes th/td)
+        // 2) Parcourir toutes les lignes de stats
         const statRows = infobox.querySelectorAll('tr.infobox-data');
         statRows.forEach((row) => {
-            const th = row.querySelector('th');
+            const th = row.querySelector('th[scope="row"]');
             const td = row.querySelector('td');
             if (!th || !td) return;
 
             const label = th.textContent?.trim() || '';
-            let value = td.textContent?.trim() || '';
-            value = value.replace(/\s+/g, ' ');
 
             switch (label) {
+                case 'Weight':
+                    // ✅ CORRIGÉ : Récupérer tous les spans et prendre le dernier
+                    { const weightDiv = td.querySelector('div.template-weight');
+                    if (weightDiv) {
+                        // Méthode 1 : Récupérer tous les enfants directs <span>
+                        const allSpans = Array.from(weightDiv.querySelectorAll('span'));
+                        const weightSpan = allSpans[allSpans.length - 1]; // Dernier span
+                        const weightText = weightSpan?.textContent?.trim() || '0';
+                        data.weight = parseFloat(weightText);
+
+                        // OU Méthode 2 : Utiliser le textContent de la div directement
+                        // const fullText = weightDiv.textContent?.trim() || '0';
+                        // const weightMatch = fullText.match(/[\d.]+/);
+                        // if (weightMatch) {
+                        //   data.weight = parseFloat(weightMatch[0]);
+                        // }
+                    }
+                    break; }
+
                 case 'Ammo':
-                    data.ammo = value;
-                    break;
+                    { const ammoText = td.textContent?.trim() || '';
+                    data.ammo = ammoText.replace(/\s+/g, ' ');
+                    break; }
+
                 case 'Magazine Size':
-                    data.magazineSize = value;
+                    data.magazineSize = td.textContent?.trim() || '';
                     break;
+
                 case 'Firing Mode':
-                    data.firingMode = value;
+                    data.firingMode = td.textContent?.trim() || '';
                     break;
+
                 case 'ARC Armor Penetration':
-                    data.arcArmorPen = value;
+                    data.arcArmorPen = td.textContent?.trim() || '';
                     break;
+
                 case 'Special Trait':
-                    data.specialTrait = value;
+                    data.specialTrait = td.textContent?.trim() || '';
                     break;
+
                 case 'Damage':
-                    data.damage = value;
+                    data.damage = td.textContent?.trim() || '';
                     break;
+
                 case 'Fire Rate':
-                    data.fireRate = value;
+                    data.fireRate = td.textContent?.trim() || '';
                     break;
+
                 case 'Headshot Multiplier':
-                    data.headshotMultiplier = value;
+                    data.headshotMultiplier = td.textContent?.trim() || '';
                     break;
+
                 case 'Range':
-                    data.range = value;
+                    data.range = td.textContent?.trim() || '';
                     break;
+
                 case 'Stability':
-                    data.stability = value;
+                    data.stability = td.textContent?.trim() || '';
                     break;
+
                 case 'Agility':
-                    data.agility = value;
+                    data.agility = td.textContent?.trim() || '';
                     break;
+
                 case 'Stealth':
-                    data.stealth = value;
+                    data.stealth = td.textContent?.trim() || '';
                     break;
+
+                case 'Sell Price':
+                    // Récupérer les 4 prix (niveaux I, II, III, IV)
+                    { const priceSpans = td.querySelectorAll('span.template-price');
+                    const prices: number[] = [];
+
+                    priceSpans.forEach((span) => {
+                        const priceText = span.textContent?.trim() || '';
+                        const priceMatch = priceText.replace(/,/g, '').match(/\d+/);
+                        if (priceMatch) {
+                            prices.push(parseInt(priceMatch[0]));
+                        }
+                    });
+
+                    // S'assurer d'avoir 4 valeurs
+                    while (prices.length < 4) {
+                        prices.push(0);
+                    }
+                    data.sellPrices = prices.slice(0, 4);
+                    break; }
+
                 default:
                     break;
             }
@@ -209,68 +253,63 @@ const scrapeWeaponPage = async (
     };
 };
 
-const toCsv = (rows: WeaponRow[]): string => {
-    const headers = [
-        'Name',
-        'PageUrl',
-        'ImageUrl',
-        'ImageFileName',
-        'Ammo',
-        'WeaponType',
-        'Rarity',
-        'Weight',
-        'Damage',
-        'FireRate',
-        'HeadshotMultiplier',
-        'Range',
-        'Stability',
-        'Agility',
-        'Stealth',
-        'ARCArmorPen',
-        'SpecialTrait',
-        'MagazineSize',
-        'FiringMode',
-    ];
+const generateTypeScript = (weapons: WeaponRow[]): string => {
+    let output = '';
+    output += '// ============================================================================\n';
+    output += '// WEAPONS DATA - ARC Raiders Wiki\n';
+    output += '// ============================================================================\n\n';
+    output += 'export const weapons = [\n';
 
-    const escape = (v: string | number) => {
-        if (v === null || v === undefined) return '';
-        const s = String(v);
-        if (s.includes('"') || s.includes(',') || s.includes('\n')) {
-            return `"${s.replace(/"/g, '""')}"`;
+    weapons.forEach((weapon, idx) => {
+        const comma = idx < weapons.length - 1 ? ',' : '';
+
+        // Calculer les valeurs
+        const damage = parseFloat(weapon.damage) || 0;
+        const fireRate = parseFloat(weapon.fireRate) || 0;
+        const dps = Math.round(damage * fireRate);
+
+        // Magazine
+        let magazine = 0;
+        if (weapon.magazineSize) {
+            const magMatch = weapon.magazineSize.match(/\d+/);
+            magazine = magMatch ? parseInt(magMatch[0]) : 0;
         }
-        return s;
-    };
 
-    const lines = [
-        headers.join(','),
-        ...rows.map((r) =>
-            [
-                r.name,
-                r.pageUrl,
-                r.imageUrl,
-                r.imageFileName,
-                r.ammo,
-                r.weaponType,
-                r.rarity,
-                r.weight,
-                r.damage,
-                r.fireRate,
-                r.headshotMultiplier,
-                r.range,
-                r.stability,
-                r.agility,
-                r.stealth,
-                r.arcArmorPen,
-                r.specialTrait,
-                r.magazineSize,
-                r.firingMode,
-            ]
-                .map(escape)
-                .join(',')
-        ),
-    ];
+        // Range
+        const rangeVal = weapon.range || '';
+        const rangeStr = rangeVal ? `"${rangeVal}"` : 'null';
 
-    return lines.join('\n');
+        // ID
+        const weaponId = `weapon_${weapon.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+
+        // Description
+        const description = weapon.specialTrait
+            ? `${weapon.weaponType} • ${weapon.specialTrait}`
+            : `${weapon.weaponType} • Uses ${weapon.ammo}`;
+
+        output += '  {\n';
+        output += `    id: "${weaponId}",\n`;
+        output += `    name: "${weapon.name}",\n`;
+        output += `    type: "Weapons",\n`;
+        output += `    class: "${weapon.weaponType}",\n`;
+        output += `    rarity: "${weapon.rarity}",\n`;
+        output += `    value: [${weapon.sellPrices.join(', ')}],\n`;
+        output += `    weight: ${weapon.weight},\n`;
+        output += `    damage: ${damage},\n`;
+        output += `    fireRate: ${fireRate},\n`;
+        output += `    firingMode: "${weapon.firingMode}",\n`;
+        output += `    range: ${rangeStr},\n`;
+        output += `    magazine: ${magazine},\n`;
+        output += `    ammo: "${weapon.ammo}",\n`;
+        output += `    dps: ${dps},\n`;
+        output += `    mods: "Unknown",\n`;
+        output += `    imageUrl: "${weapon.imageUrl}",\n`;
+        output += `    description: "${description}"\n`;
+        output += `  }${comma}\n`;
+    });
+
+    output += '];\n';
+    return output;
 };
 
 (async () => {
@@ -280,7 +319,7 @@ const toCsv = (rows: WeaponRow[]): string => {
     });
     const page = await browser.newPage();
 
-    console.log('📄 Récupération de la liste des armes depuis tous les tableaux...');
+    console.log('📄 Récupération de la liste des armes...');
     const list = await scrapeAllWeaponTables(page);
     console.log(`✅ ${list.length} armes trouvées\n`);
 
@@ -289,25 +328,23 @@ const toCsv = (rows: WeaponRow[]): string => {
     for (let i = 0; i < list.length; i++) {
         const base = list[i];
         console.log(`[${i + 1}/${list.length}] ${base.name}`);
-        console.log(`  🔗 ${base.pageUrl}`);
 
         try {
             const full = await scrapeWeaponPage(page, base);
             results.push(full);
-            console.log(`  ✅ Poids: ${full.weight} kg | Dégâts: ${full.damage} | Cadence: ${full.fireRate}`);
+            console.log(`  ✅ ${full.rarity} | Weight: ${full.weight}kg | Prix: [${full.sellPrices.join(', ')}]`);
         } catch (e: any) {
             console.error(`  ❌ Erreur: ${e.message || e}`);
         }
 
-        // Délai entre chaque requête
         await new Promise((res) => setTimeout(res, 1500));
     }
 
     await browser.close();
 
-    const csv = toCsv(results);
-    const outPath = path.resolve('weapons_arcraiders.csv');
-    fs.writeFileSync(outPath, csv, 'utf8');
+    const tsCode = generateTypeScript(results);
+    const outPath = path.resolve('weapons_data.ts');
+    fs.writeFileSync(outPath, tsCode, 'utf8');
 
     console.log(`\n✅ ${results.length} armes sauvegardées dans: ${outPath}`);
 })();

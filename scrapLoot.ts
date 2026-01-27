@@ -1,4 +1,4 @@
-// scrape-all-items-complete.ts
+// scrape-all-items-with-compatibility.ts
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
@@ -13,6 +13,7 @@ interface ItemData {
     stackSize: number;
     value: number;
     canBeFoundIn: string[];
+    compatibleWith?: string[];  // ← Armes compatibles pour les mods
     imageUrl: string;
     pageUrl: string;
     description: string;
@@ -29,7 +30,7 @@ const categoryTypeMap: Record<string, string> = {
     'Recyclable': 'Crafting Materials',
     'Trinket': 'Gear',
     'Key': 'Gear',
-    'Mods': 'Gear',
+    'Mods': 'Mods',
     'Augment': 'Gear',
     'Shield': 'Gear',
     'Ammunition': 'Ammo',
@@ -96,20 +97,19 @@ const scrapeItemPage = async (page: puppeteer.Page, item: any): Promise<ItemData
             stackSize: 1,
             value: 0,
             canBeFoundIn: [],
+            compatibleWith: [],
             imageUrl: '',
             description: ''
         };
 
-        // 1. Image (premier tr avec class infobox-image)
+        // 1. Image
         const imageRow = infobox.querySelector('tr.infobox-image');
         if (imageRow) {
             const img = imageRow.querySelector('picture img') as HTMLImageElement;
             if (img) {
                 let src = img.getAttribute('src') || '';
-                // Prendre la version haute résolution si disponible
                 const srcset = img.getAttribute('srcset');
                 if (srcset) {
-                    // Extraire la meilleure qualité (2x)
                     const srcsetMatch = srcset.match(/([^\s,]+)\s+2x/);
                     if (srcsetMatch) {
                         src = srcsetMatch[1];
@@ -119,17 +119,36 @@ const scrapeItemPage = async (page: puppeteer.Page, item: any): Promise<ItemData
             }
         }
 
-        // 2. Rarity (chercher tr avec class data-tag)
+        // 2. Rarity
         const rarityRow = infobox.querySelector('tr.data-tag');
         if (rarityRow) {
             const rarityText = rarityRow.textContent?.trim() || 'Common';
             result.rarity = rarityText;
         }
 
-        // 3. Parcourir toutes les lignes avec <th scope="row">
+        // 3. Parcourir toutes les lignes
         const dataRows = infobox.querySelectorAll('tr');
 
         dataRows.forEach((row) => {
+            // ✅ NOUVEAU: Récupérer la compatibilité depuis tr.data-warning
+            if (row.classList.contains('data-warning')) {
+                const td = row.querySelector('td');
+                if (td) {
+                    const text = td.textContent || '';
+                    // Vérifier si c'est la ligne de compatibilité
+                    if (text.includes('Compatible with:')) {
+                        // Extraire tous les liens d'armes
+                        const weaponLinks = Array.from(td.querySelectorAll('a'));
+                        const weapons = weaponLinks.map(link => {
+                            return link.getAttribute('title') || link.textContent?.trim() || '';
+                        }).filter(name => name.length > 0);
+
+                        result.compatibleWith = weapons;
+                    }
+                }
+                return;
+            }
+
             const th = row.querySelector('th[scope="row"]');
             const td = row.querySelector('td');
 
@@ -169,7 +188,7 @@ const scrapeItemPage = async (page: puppeteer.Page, item: any): Promise<ItemData
             }
         });
 
-        // Description (premier paragraphe)
+        // Description
         const firstP = document.querySelector('p');
         if (firstP) {
             result.description = firstP.textContent?.trim().substring(0, 150) || '';
@@ -196,6 +215,7 @@ const scrapeItemPage = async (page: puppeteer.Page, item: any): Promise<ItemData
         stackSize: data.stackSize,
         value: data.value,
         canBeFoundIn: data.canBeFoundIn,
+        compatibleWith: data.compatibleWith.length > 0 ? data.compatibleWith : undefined,
         imageUrl: data.imageUrl,
         pageUrl: item.pageUrl,
         description: data.description
@@ -207,7 +227,8 @@ const generateTypeScript = (items: ItemData[]): string => {
         'Consumables': [],
         'Crafting Materials': [],
         'Gear': [],
-        'Ammo': []
+        'Ammo': [],
+        'Mods': []
     };
 
     items.forEach(item => {
@@ -238,7 +259,15 @@ const generateTypeScript = (items: ItemData[]): string => {
             output += `    rarity: "${item.rarity}",\n`;
             output += `    value: ${item.value},\n`;
             output += `    weight: ${item.weight},\n`;
-            output += `    imageUrl: "${item.imageUrl}",\n`;  // ← IMAGE URL AJOUTÉE ICI
+            output += `    stackSize: ${item.stackSize},\n`;
+
+            // ✅ Ajouter compatibleWith si présent (pour les mods)
+            if (item.compatibleWith && item.compatibleWith.length > 0) {
+                const compatList = item.compatibleWith.map(w => `"${w}"`).join(', ');
+                output += `    compatibleWith: [${compatList}],\n`;
+            }
+
+            output += `    imageUrl: "${item.imageUrl}",\n`;
             output += `    description: "${item.description.replace(/"/g, '\\"').replace(/\n/g, ' ')}"\n`;
             output += `  }${comma}\n`;
         });
@@ -270,10 +299,14 @@ const generateTypeScript = (items: ItemData[]): string => {
         try {
             const fullData = await scrapeItemPage(page, item);
             allItems.push(fullData);
-            console.log(`  ✅ ${fullData.rarity} | ${fullData.weight}kg | ${fullData.value}¢`);
-            if (fullData.imageUrl) {
-                console.log(`  🖼️  Image: ${fullData.imageUrl.substring(0, 60)}...`);
+
+            let logMessage = `  ✅ ${fullData.rarity} | ${fullData.weight}kg | ${fullData.value}¢`;
+
+            if (fullData.compatibleWith && fullData.compatibleWith.length > 0) {
+                logMessage += ` | Compatible: ${fullData.compatibleWith.length} armes`;
             }
+
+            console.log(logMessage);
         } catch (e: any) {
             console.error(`  ❌ Erreur: ${e.message}`);
         }
@@ -299,4 +332,8 @@ const generateTypeScript = (items: ItemData[]): string => {
     Object.entries(byType).forEach(([type, count]) => {
         console.log(`  - ${type}: ${count} items`);
     });
+
+    // Compter les mods avec compatibilité
+    const modsWithCompat = allItems.filter(i => i.type === 'Mods' && i.compatibleWith && i.compatibleWith.length > 0);
+    console.log(`\n🔧 Mods avec compatibilité: ${modsWithCompat.length}`);
 })();

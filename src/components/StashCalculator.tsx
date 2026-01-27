@@ -42,6 +42,8 @@ export function StashCalculator() {
   const sortedStashItems = useMemo(() => {
     return [...stashItems].sort((a, b) => {
       let aVal: number, bVal: number;
+      const aValue = a.item.type === "Weapons" ? a.item.value[a.weaponLevel] : a.item.value
+      const bValue = b.item.type === "Weapons" ? b.item.value[b.weaponLevel] : b.item.value
       switch (sortKey) {
         case 'name':
           return sortDirection === 'asc' 
@@ -52,8 +54,8 @@ export function StashCalculator() {
           bVal = b.quantity;
           break;
         case 'value':
-          aVal = getEffectiveValue(a) * a.quantity;
-          bVal = getEffectiveValue(b) * b.quantity;
+          aVal = aValue * a.quantity;
+          bVal = bValue * b.quantity;
           break;
           break;
         case 'weight':
@@ -61,9 +63,8 @@ export function StashCalculator() {
           bVal = b.item.weight * b.quantity;
           break;
         case 'ratio':
-          aVal = getEffectiveValue(a) / a.item.weight;
-          bVal = getEffectiveValue(b) / b.item.weight;
-          bVal = b.item.value / b.item.weight;
+          aVal = aValue / a.item.weight;
+          bVal = bValue / b.item.weight;
           break;
         default:
           return 0;

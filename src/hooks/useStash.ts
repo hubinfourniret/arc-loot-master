@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Item, getItemById, WeaponLevel, getWeaponValueAtLevel } from '@/data/items';
+import { Item, getItemById, WeaponLevel } from '@/data/items';
 
 export interface StashItem {
   itemId: string;
@@ -21,9 +21,10 @@ const BACKUPS_KEY = 'arcraiders_stash_backups';
 // Helper to calculate effective value considering weapon level
 export const getEffectiveValue = (stashItem: StashItem): number => {
   if (stashItem.item.type === 'Weapons' && stashItem.weaponLevel) {
-    return getWeaponValueAtLevel(stashItem.item.value, stashItem.weaponLevel);
+    console.log("test",stashItem.item.value[stashItem.weaponLevel-1])
+    return stashItem.item.value[stashItem.weaponLevel-1]
   }
-  return stashItem.item.value;
+  return <number>stashItem.item.value;
 };
 
 export function useStash() {

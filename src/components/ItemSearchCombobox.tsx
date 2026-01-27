@@ -37,8 +37,12 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
+      const target = e.target as Node;
+      if (containerRef.current && !containerRef.current.contains(target)) {
+        const isInRadixPortal = (target as Element).closest?.('[data-radix-popper-content-wrapper]');
+        if (!isInRadixPortal) {
+          setIsOpen(false);
+        }
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -107,13 +111,11 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
   };
 
   // Calculate displayed value based on level for weapons
-  const getDisplayedValue = (item: BaseItem): number => {
+  const getDisplayedValue = (item: BaseItem, level: number): number => {
     if (item.type === 'Weapons') {
-      const level = weaponLevels[item.id] || 1;
-      const multipliers = { 1: 1.0, 2: 1.5, 3: 2.0, 4: 2.5 };
-      return Math.round(item.value * multipliers[level]);
+      return item.value[level-1]
     }
-    return item.value;
+    return item.value as number;
   };
 
   return (
@@ -149,7 +151,7 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
                 {filteredItems.map((item, index) => {
                   const isWeapon = item.type === 'Weapons';
                   const currentLevel = weaponLevels[item.id] || 1;
-                  const displayedValue = getDisplayedValue(item);
+                  const displayedValue = getDisplayedValue(item, currentLevel);
                   
                   return (
                     <div
@@ -207,7 +209,7 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
                             updateWeaponLevel(item.id, parseInt(val) as WeaponLevel);
                           }}
                         >
-                          <SelectTrigger 
+                          <SelectTrigger
                             className="w-20 h-8 bg-background border-border"
                             onClick={(e) => e.stopPropagation()}
                           >

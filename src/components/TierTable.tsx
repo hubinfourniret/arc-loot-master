@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { allItems, itemTypes, rarities, getWeaponValueAtLevel, WeaponLevel } from '@/data/items';
+import { allItems, itemTypes, rarities } from '@/data/items';
 import { ItemImage } from '@/components/ItemImage';
 import { toast } from 'sonner';
 interface TierTableProps {
@@ -66,7 +66,7 @@ export function TierTable({ onAddItem }: TierTableProps) {
       const bFav = favorites.has(b.id) ? 1 : 0;
       if (aFav !== bFav) return bFav - aFav;
 
-      let aVal: number | string, bVal: number | string;
+      let aVal: number[] | number, bVal: number[] | number;
       switch (sortKey) {
         case 'name':
           return sortDirection === 'asc' 
@@ -81,8 +81,8 @@ export function TierTable({ onAddItem }: TierTableProps) {
           bVal = b.weight;
           break;
         case 'ratio':
-          aVal = a.value / a.weight;
-          bVal = b.value / b.weight;
+          aVal = a?.value[1] / a.weight;
+          bVal = b?.value[1] / b.weight;
           break;
         case 'rarity':
           { const rarityOrder = { 'Common': 0, "Uncommon": 1,'Rare': 2, 'Epic': 3, 'Legendary': 4 };
@@ -103,7 +103,7 @@ export function TierTable({ onAddItem }: TierTableProps) {
 
   // Find special items
   const bestRatioItem = allItems.reduce((best, item) =>
-    (item.value / item.weight) > (best.value / best.weight) ? item : best
+    ((item.type === "Weapons" ? item.value[1] : item.value) / item.weight) > ((best.type === "Weapons" ? best.value[1] : best.value) / best.weight) ? item : best
   );
   const heaviestItem = allItems.reduce((heavy, item) =>
     item.weight > heavy.weight ? item : heavy
@@ -287,23 +287,23 @@ export function TierTable({ onAddItem }: TierTableProps) {
                         <span className="text-xs px-2 py-1 rounded bg-muted">{item.type}</span>
                       </td>
                       <td className="p-3 text-right text-primary font-mono font-bold">
-                        {item.value.toLocaleString()}
+                        {item.type === "Weapons" ? item.value[0].toLocaleString() : item.value.toLocaleString()}
                       </td>
                       {/* Weapon level values - only show for weapons */}
                       <td className="p-3 text-right text-muted-foreground font-mono hidden md:table-cell">
-                        {item.type === 'Weapons' ? getWeaponValueAtLevel(item.value, 2).toLocaleString() : '—'}
+                        {item.value[1] ? item.value[1].toLocaleString() : "-"}
                       </td>
                       <td className="p-3 text-right text-muted-foreground font-mono hidden lg:table-cell">
-                        {item.type === 'Weapons' ? getWeaponValueAtLevel(item.value, 3).toLocaleString() : '—'}
+                        {item.value[2] ? item.value[2].toLocaleString() : "-"}
                       </td>
                       <td className="p-3 text-right text-muted-foreground font-mono hidden lg:table-cell">
-                        {item.type === 'Weapons' ? getWeaponValueAtLevel(item.value, 4).toLocaleString() : '—'}
+                        {item.value[3] ? item.value[3].toLocaleString() : "-"}
                       </td>
                       <td className="p-3 text-right text-muted-foreground font-mono hidden md:table-cell">
                         {item.weight}kg
                       </td>
                       <td className="p-3 text-right text-success font-mono hidden lg:table-cell">
-                        {(item.value / item.weight).toFixed(1)}
+                        {((item.type === "Weapons" ? item.value[1] : item.value) / item.weight).toFixed(1)}
                       </td>
                       <td className="p-3 text-center">
                         <span className={`text-xs px-2 py-1 rounded border ${
