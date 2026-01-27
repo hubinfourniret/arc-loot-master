@@ -1,7 +1,6 @@
 import React from 'react';
 import { ChevronDown, Target, Package, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import * as url from "node:url";
 
 interface HeroSectionProps {
   onStartCalculating: () => void;
@@ -13,14 +12,14 @@ export function HeroSection({ onStartCalculating }: HeroSectionProps) {
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background-secondary" />
       
-      {/* Grid overlay */}
+      {/* Background image overlay */}
       <div 
         className="absolute inset-0 opacity-10"
         style={{
-          backgroundImage: 'url("./../../public/features-keyart.jpg")',
-          backgroundSize: '2041px 969px',
-          backgroundPosition: 'center center, no-repeat fixed',
-
+          backgroundImage: 'url("/features-keyart.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
         }}
       />
       

@@ -3805,6 +3805,10 @@ export const allItems: BaseItem[] = [
   ...ammo,
 ];
 
+// Alias for backwards compatibility
+export type Item = BaseItem;
+export const items = allItems;
+
 export const itemTypes = ['Weapons', 'Consumables', 'Crafting Materials', 'Gear', 'Ammo', 'Throwables'] as const;
 export const rarities = ['Common', "Uncommon", 'Rare', 'Legendary', 'Epic'] as const;
 
