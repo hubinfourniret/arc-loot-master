@@ -3,7 +3,8 @@ import { Trash2, Save, Upload, Copy, ChevronUp, ChevronDown, Package, Scale, Coi
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useStash, StashBackup } from '@/hooks/useStash';
+import { useStash, StashBackup, getEffectiveValue } from '@/hooks/useStash';
+import { WeaponLevel } from '@/data/items';
 import { ItemImage } from '@/components/ItemImage';
 import { ItemSearchCombobox } from '@/components/ItemSearchCombobox';
 import { toast } from 'sonner';
@@ -51,15 +52,17 @@ export function StashCalculator() {
           bVal = b.quantity;
           break;
         case 'value':
-          aVal = a.item.value * a.quantity;
-          bVal = b.item.value * b.quantity;
+          aVal = getEffectiveValue(a) * a.quantity;
+          bVal = getEffectiveValue(b) * b.quantity;
+          break;
           break;
         case 'weight':
           aVal = a.item.weight * a.quantity;
           bVal = b.item.weight * b.quantity;
           break;
         case 'ratio':
-          aVal = a.item.value / a.item.weight;
+          aVal = getEffectiveValue(a) / a.item.weight;
+          bVal = getEffectiveValue(b) / b.item.weight;
           bVal = b.item.value / b.item.weight;
           break;
         default:
@@ -69,8 +72,8 @@ export function StashCalculator() {
     });
   }, [stashItems, sortKey, sortDirection]);
 
-  const handleAddItem = (itemId: string, qty: number) => {
-    addItem(itemId, qty);
+  const handleAddItem = (itemId: string, qty: number, weaponLevel?: WeaponLevel) => {
+    addItem(itemId, qty, weaponLevel);
     toast.success('Item added to stash');
   };
 
@@ -245,60 +248,72 @@ export function StashCalculator() {
                         </td>
                       </tr>
                     ) : (
-                      sortedStashItems.map((stash) => (
-                        <tr key={stash.itemId} className="border-t border-border hover:bg-muted/30 transition-colors">
-                          <td className="p-3">
-                            <ItemImage 
-                              src={stash.item.imageUrl} 
-                              alt={stash.item.name} 
-                              size="sm" 
-                              rarity={stash.item.rarity} 
-                            />
-                          </td>
-                          <td className="p-3">
-                            <div className="flex items-center gap-2">
-                              <span className={`text-xs px-1.5 py-0.5 rounded border ${
-                                stash.item.rarity === 'Legendary' ? 'rarity-legendary' :
-                                stash.item.rarity === 'Rare' ? 'rarity-rare' : 'rarity-common'
-                              }`}>
-                                {stash.item.rarity.charAt(0)}
-                              </span>
-                              <span className="text-foreground font-medium">{stash.item.name}</span>
-                            </div>
-                          </td>
-                          <td className="p-3 text-center">
-                            <Input
-                              type="number"
-                              min={1}
-                              value={stash.quantity}
-                              onChange={(e) => updateQuantity(stash.itemId, parseInt(e.target.value) || 0)}
-                              className="w-16 h-8 text-center bg-muted border-border mx-auto"
-                            />
-                          </td>
-                          <td className="p-3 text-right text-muted-foreground font-mono">
-                            {stash.item.value.toLocaleString()}
-                          </td>
-                          <td className="p-3 text-right text-primary font-bold font-mono">
-                            {(stash.item.value * stash.quantity).toLocaleString()}
-                          </td>
-                          <td className="p-3 text-right text-muted-foreground font-mono hidden sm:table-cell">
-                            {(stash.item.weight * stash.quantity).toFixed(1)}kg
-                          </td>
-                          <td className="p-3 text-right text-success font-mono hidden md:table-cell">
-                            {(stash.item.value / stash.item.weight).toFixed(1)}
-                          </td>
-                          <td className="p-3 text-center">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeItem(stash.itemId)}
-                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/20"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
+                      sortedStashItems.map((stash) => {
+                        const effectiveValue = getEffectiveValue(stash);
+                        const stashKey = stash.item.type === 'Weapons' 
+                          ? `${stash.itemId}-lvl${stash.weaponLevel}` 
+                          : stash.itemId;
+                        
+                        return (
+                          <tr key={stashKey} className="border-t border-border hover:bg-muted/30 transition-colors">
+                            <td className="p-3">
+                              <ItemImage 
+                                src={stash.item.imageUrl} 
+                                alt={stash.item.name} 
+                                size="sm" 
+                                rarity={stash.item.rarity} 
+                              />
+                            </td>
+                            <td className="p-3">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs px-1.5 py-0.5 rounded border ${
+                                  stash.item.rarity === 'Legendary' ? 'rarity-legendary' :
+                                  stash.item.rarity === 'Rare' ? 'rarity-rare' : 'rarity-common'
+                                }`}>
+                                  {stash.item.rarity.charAt(0)}
+                                </span>
+                                <span className="text-foreground font-medium">{stash.item.name}</span>
+                                {stash.weaponLevel && (
+                                  <span className="text-xs px-1.5 py-0.5 rounded bg-accent text-accent-foreground">
+                                    Lvl {stash.weaponLevel}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-3 text-center">
+                              <Input
+                                type="number"
+                                min={1}
+                                value={stash.quantity}
+                                onChange={(e) => updateQuantity(stash.itemId, parseInt(e.target.value) || 0, stash.weaponLevel)}
+                                className="w-16 h-8 text-center bg-muted border-border mx-auto"
+                              />
+                            </td>
+                            <td className="p-3 text-right text-muted-foreground font-mono">
+                              {effectiveValue.toLocaleString()}
+                            </td>
+                            <td className="p-3 text-right text-primary font-bold font-mono">
+                              {(effectiveValue * stash.quantity).toLocaleString()}
+                            </td>
+                            <td className="p-3 text-right text-muted-foreground font-mono hidden sm:table-cell">
+                              {(stash.item.weight * stash.quantity).toFixed(1)}kg
+                            </td>
+                            <td className="p-3 text-right text-success font-mono hidden md:table-cell">
+                              {(effectiveValue / stash.item.weight).toFixed(1)}
+                            </td>
+                            <td className="p-3 text-center">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeItem(stash.itemId, stash.weaponLevel)}
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/20"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>

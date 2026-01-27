@@ -1,3 +1,18 @@
+// Weapon level multipliers for value calculation
+export const WEAPON_LEVEL_MULTIPLIERS = {
+  1: 1.0,
+  2: 1.5,
+  3: 2.0,
+  4: 2.5,
+} as const;
+
+export type WeaponLevel = 1 | 2 | 3 | 4;
+
+// Helper function to calculate weapon value based on level
+export const getWeaponValueAtLevel = (baseValue: number, level: WeaponLevel): number => {
+  return Math.round(baseValue * WEAPON_LEVEL_MULTIPLIERS[level]);
+};
+
 export interface BaseItem {
   id: string;
   name: string;
