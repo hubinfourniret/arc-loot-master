@@ -7,7 +7,7 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ onStartCalculating }: HeroSectionProps) {
-  return (
+    return (
     <section id="home" className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background-secondary" />

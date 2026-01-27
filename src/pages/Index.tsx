@@ -50,10 +50,9 @@ const Index = () => {
     }
   };
 
-  const handleStartCalculating = () => {
-    calculatorRef.current?.scrollIntoView({ behavior: 'smooth' });
-    setActiveSection('calculator');
-  };
+  function onStartCalculating () {
+    handleNavigate("calculator")
+  }
 
   // Update active section based on scroll
   useEffect(() => {
@@ -91,7 +90,7 @@ const Index = () => {
           <SidebarAd />
         </div>*/}
 
-        <HeroSection onStartCalculating={handleStartCalculating} />
+        <HeroSection onStartCalculating={onStartCalculating} />
         
         <div ref={calculatorRef}>
           <StashCalculator />

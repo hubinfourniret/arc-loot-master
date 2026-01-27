@@ -150,7 +150,7 @@ export function StashCalculator() {
             {/* Add Item Form - New Combobox */}
             <div className="card-tactical rounded-lg p-6">
               <h3 className="text-lg font-bold text-foreground mb-4">
-                🔍 Quick Add Items
+                Quick Add Items
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Search by name, type or rarity. Click + or press Enter to add items quickly.
@@ -347,7 +347,7 @@ export function StashCalculator() {
                     <span className="text-sm">Total Weight</span>
                   </div>
                   <span className="font-mono text-foreground">
-                    {totalWeight.toFixed(1)}
+                    {totalWeight.toFixed(1)}kg
                   </span>
                 </div>
                 <div className="progress-tactical h-3 rounded">
