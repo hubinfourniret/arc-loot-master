@@ -104,7 +104,7 @@ export function LoadoutOptimizer() {
                 <div key={slot.slotId} className="card-tactical rounded-lg p-4">
                   <div className="flex items-start gap-4">
                     <ItemImage 
-                      src={slot.item?.image} 
+                      src={slot.item?.imageUrl} 
                       alt={slot.item?.name || 'Empty slot'} 
                       size="lg" 
                       rarity={slot.item?.rarity || 'Common'} 

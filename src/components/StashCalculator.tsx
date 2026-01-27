@@ -312,7 +312,7 @@ export function StashCalculator() {
                         <tr key={stash.itemId} className="border-t border-border hover:bg-muted/30 transition-colors">
                           <td className="p-3">
                             <ItemImage 
-                              src={stash.item.image} 
+                              src={stash.item.imageUrl} 
                               alt={stash.item.name} 
                               size="sm" 
                               rarity={stash.item.rarity} 
