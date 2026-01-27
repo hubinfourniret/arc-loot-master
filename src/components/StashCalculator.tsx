@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Plus, Trash2, Save, Download, Upload, Copy, ChevronUp, ChevronDown, Package, Scale, Coins, Recycle, Hash, FileDown, FileUp } from 'lucide-react';
+import { Trash2, Save, Upload, Copy, ChevronUp, ChevronDown, Package, Scale, Coins, Recycle, Hash, FileDown, FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useStash, StashBackup } from '@/hooks/useStash';
-import { allItems, itemTypes } from '@/data/items';
 import { ItemImage } from '@/components/ItemImage';
+import { ItemSearchCombobox } from '@/components/ItemSearchCombobox';
 import { toast } from 'sonner';
 
 type SortKey = 'name' | 'quantity' | 'value' | 'weight' | 'ratio';
@@ -34,19 +34,9 @@ export function StashCalculator() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [selectedItemId, setSelectedItemId] = useState<string>('');
-  const [quantity, setQuantity] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('value');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [backups, setBackups] = useState<StashBackup[]>([]);
-
-  const filteredItems = useMemo(() => {
-    return allItems.filter(item =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.type.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
 
   const sortedStashItems = useMemo(() => {
     return [...stashItems].sort((a, b) => {
@@ -79,14 +69,8 @@ export function StashCalculator() {
     });
   }, [stashItems, sortKey, sortDirection]);
 
-  const handleAddItem = () => {
-    if (!selectedItemId) {
-      toast.error('Please select an item');
-      return;
-    }
-    addItem(selectedItemId, quantity);
-    setSelectedItemId('');
-    setQuantity(1);
+  const handleAddItem = (itemId: string, qty: number) => {
+    addItem(itemId, qty);
     toast.success('Item added to stash');
   };
 
@@ -153,68 +137,21 @@ export function StashCalculator() {
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
             Stash Value <span className="text-gradient-primary">Calculator</span>
           </h2>
-          <p className="text-muted-foreground">Add items to calculate your total stash value</p>
+          <p className="text-muted-foreground">Search and add items to calculate your total stash value</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Input Section */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Add Item Form */}
+            {/* Add Item Form - New Combobox */}
             <div className="card-tactical rounded-lg p-6">
-              <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                <Plus className="w-5 h-5 text-primary" />
-                Add Items to Your Stash
+              <h3 className="text-lg font-bold text-foreground mb-4">
+                🔍 Quick Add Items
               </h3>
-              
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Search items..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="mb-2 bg-muted border-border"
-                  />
-                  <Select value={selectedItemId} onValueChange={setSelectedItemId}>
-                    <SelectTrigger className="bg-muted border-border">
-                      <SelectValue placeholder="Select an item..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover border-border max-h-64">
-                      {filteredItems.map(item => (
-                        <SelectItem key={item.id} value={item.id}>
-                          <span className="flex items-center gap-2">
-                            <span className={`text-xs px-1.5 py-0.5 rounded ${
-                              item.rarity === 'Legendary' ? 'bg-yellow-500/20 text-yellow-400' :
-                              item.rarity === 'Rare' ? 'bg-primary/20 text-primary' :
-                              item.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400' :
-                              'bg-muted-foreground/20 text-muted-foreground'
-                            }`}>
-                              {item.type.slice(0, 4)}
-                            </span>
-                            {item.name} - {item.value}c
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="w-24">
-                  <label className="text-xs text-muted-foreground mb-1 block">Qty</label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="bg-muted border-border"
-                  />
-                </div>
-                
-                <div className="flex items-end">
-                  <Button onClick={handleAddItem} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    <Plus className="w-4 h-4 mr-1" /> Add
-                  </Button>
-                </div>
-              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Search by name, type or rarity. Click + or press Enter to add items quickly.
+              </p>
+              <ItemSearchCombobox onAddItem={handleAddItem} />
             </div>
 
             {/* Stash Table */}
