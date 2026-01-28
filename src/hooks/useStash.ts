@@ -99,7 +99,7 @@ export function useStash() {
       // For weapons, we need to check both itemId AND level
       const existing = prev.find(s => 
         s.itemId === itemId && 
-        (item.type !== 'Weapons' || s.weaponLevel === weaponLevel)
+        (item.type !== 'Weapons' || s.weaponLevel === weaponLevel) && s.attachedMods.length === 0
       );
       
       if (existing) {

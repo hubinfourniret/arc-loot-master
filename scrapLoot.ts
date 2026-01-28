@@ -1,4 +1,4 @@
-// scrape-all-items-with-mod-categories.ts
+// scrape-all-items-complete-final.ts
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
@@ -8,7 +8,7 @@ interface ItemData {
     name: string;
     type: string;
     category: string;
-    modCategory?: string;  // ← NOUVEAU: Catégorie spécifique pour les mods
+    modCategory?: string;
     rarity: string;
     weight: number;
     stackSize: number;
@@ -46,7 +46,6 @@ const rarityMap: Record<string, string> = {
     'Legendary': 'Legendary'
 };
 
-// ✅ NOUVEAU: Mapping des icônes vers les catégories de mods
 const modIconCategoryMap: Record<string, string> = {
     'Mods_Muzzle.png': 'Muzzle',
     'Mods_Shotgun-Muzzle.png': 'Shotgun Muzzle',
@@ -73,6 +72,7 @@ const scrapeItemsList = async (page: puppeteer.Page) => {
             rows.forEach((row) => {
                 const itemTd = row.querySelector('td.field_Item');
                 const categoryTd = row.querySelector('td.field_Category');
+                const rarityTd = row.querySelector('td.field_Rarity');
 
                 if (!itemTd || !categoryTd) return;
 
@@ -82,13 +82,15 @@ const scrapeItemsList = async (page: puppeteer.Page) => {
                 const href = link.getAttribute('href');
                 const name = link.getAttribute('title') || link.textContent?.trim() || '';
                 const category = categoryTd.textContent?.trim() || 'Unknown';
+                const rarity = rarityTd?.textContent?.trim() || 'Common';
 
                 if (!href || !name) return;
 
                 results.push({
                     name,
                     pageUrl: href.startsWith('http') ? href : `https://arcraiders.wiki${href}`,
-                    category
+                    category,
+                    rarity
                 });
             });
         });
@@ -106,19 +108,17 @@ const scrapeItemPage = async (page: puppeteer.Page, item: any): Promise<ItemData
         if (!infobox) throw new Error('Infobox not found');
 
         const result: any = {
-            rarity: 'Common',
             weight: 0.5,
             stackSize: 1,
             value: 0,
             canBeFoundIn: [],
             compatibleWith: [],
-            modCategory: null,
             modIconUrl: null,
             imageUrl: '',
             description: ''
         };
 
-        // 1. Image principale (premier tr avec class infobox-image)
+        // 1. Image principale
         const imageRow = infobox.querySelector('tr.infobox-image');
         if (imageRow) {
             const img = imageRow.querySelector('picture img') as HTMLImageElement;
@@ -135,7 +135,7 @@ const scrapeItemPage = async (page: puppeteer.Page, item: any): Promise<ItemData
             }
         }
 
-        // 2. ✅ NOUVEAU: Détecter l'icône de catégorie de mod dans tr.data-tag.icon
+        // 2. Icône de catégorie de mod
         const iconRow = infobox.querySelector('tr.data-tag.icon');
         if (iconRow) {
             const iconImg = iconRow.querySelector('picture img') as HTMLImageElement;
@@ -145,18 +145,11 @@ const scrapeItemPage = async (page: puppeteer.Page, item: any): Promise<ItemData
             }
         }
 
-        // 3. Rarity (chercher tr avec class data-tag mais pas icon)
-        const rarityRow = infobox.querySelector('tr.data-tag:not(.icon)');
-        if (rarityRow) {
-            const rarityText = rarityRow.textContent?.trim() || 'Common';
-            result.rarity = rarityText;
-        }
-
-        // 4. Parcourir toutes les lignes
+        // 3. Parcourir les lignes de données
         const dataRows = infobox.querySelectorAll('tr');
 
         dataRows.forEach((row) => {
-            // Récupérer la compatibilité depuis tr.data-warning
+            // Compatibilité des mods
             if (row.classList.contains('data-warning')) {
                 const td = row.querySelector('td');
                 if (td) {
@@ -227,15 +220,13 @@ const scrapeItemPage = async (page: puppeteer.Page, item: any): Promise<ItemData
         .replace(/^_|_$/g, '')}`;
 
     const itemType = categoryTypeMap[item.category] || 'Consumables';
-    const rarity = rarityMap[data.rarity] || 'Common';
+    const rarity = rarityMap[item.rarity] || 'Common';
 
-    // ✅ NOUVEAU: Détecter la catégorie du mod depuis l'icône
+    // Détecter la catégorie du mod depuis l'icône
     let modCategory: string | undefined = undefined;
     if (itemType === 'Mods' && data.modIconUrl) {
-        // Extraire le nom du fichier de l'URL
         const iconFileName = data.modIconUrl.split('/').pop()?.split('?')[0] || '';
 
-        // Chercher dans le mapping
         for (const [key, value] of Object.entries(modIconCategoryMap)) {
             if (iconFileName.includes(key.replace('.png', ''))) {
                 modCategory = value;
@@ -287,7 +278,7 @@ const generateTypeScript = (items: ItemData[]): string => {
 
         const varName = type.toLowerCase().replace(/ /g, '_');
         output += `// ${type.toUpperCase()} (${typeItems.length} items)\n`;
-        output += `export const ${varName}: BaseItem[] = [\n`;
+        output += `export const ${varName} = [\n`;
 
         typeItems.forEach((item, idx) => {
             const comma = idx < typeItems.length - 1 ? ',' : '';
@@ -297,7 +288,6 @@ const generateTypeScript = (items: ItemData[]): string => {
             output += `    name: "${item.name.replace(/"/g, '\\"')}",\n`;
             output += `    type: "${item.type}",\n`;
 
-            // ✅ Ajouter modCategory si présent
             if (item.modCategory) {
                 output += `    modCategory: "${item.modCategory}",\n`;
             }
@@ -307,10 +297,14 @@ const generateTypeScript = (items: ItemData[]): string => {
             output += `    weight: ${item.weight},\n`;
             output += `    stackSize: ${item.stackSize},\n`;
 
-            // Ajouter compatibleWith si présent (pour les mods)
             if (item.compatibleWith && item.compatibleWith.length > 0) {
                 const compatList = item.compatibleWith.map(w => `"${w}"`).join(', ');
                 output += `    compatibleWith: [${compatList}],\n`;
+            }
+
+            if (item.canBeFoundIn && item.canBeFoundIn.length > 0) {
+                const locationsList = item.canBeFoundIn.map(l => `"${l.replace(/"/g, '\\"')}"`).join(', ');
+                output += `    canBeFoundIn: [${locationsList}],\n`;
             }
 
             output += `    imageUrl: "${item.imageUrl}",\n`;
@@ -340,7 +334,7 @@ const generateTypeScript = (items: ItemData[]): string => {
 
     for (let i = 0; i < itemsList.length; i++) {
         const item = itemsList[i];
-        console.log(`[${i + 1}/${itemsList.length}] ${item.name} (${item.category})`);
+        console.log(`[${i + 1}/${itemsList.length}] ${item.name} (${item.category}) - ${item.rarity}`);
 
         try {
             const fullData = await scrapeItemPage(page, item);
@@ -349,7 +343,7 @@ const generateTypeScript = (items: ItemData[]): string => {
             let logMessage = `  ✅ ${fullData.rarity} | ${fullData.weight}kg | ${fullData.value}¢`;
 
             if (fullData.modCategory) {
-                logMessage += ` | Catégorie: ${fullData.modCategory}`;
+                logMessage += ` | ${fullData.modCategory}`;
             }
 
             if (fullData.compatibleWith && fullData.compatibleWith.length > 0) {
@@ -383,15 +377,26 @@ const generateTypeScript = (items: ItemData[]): string => {
         console.log(`  - ${type}: ${count} items`);
     });
 
-    // Statistiques sur les mods
+    const byRarity: Record<string, number> = {};
+    allItems.forEach(item => {
+        byRarity[item.rarity] = (byRarity[item.rarity] || 0) + 1;
+    });
+
+    console.log('\n💎 Répartition par rareté:');
+    Object.entries(byRarity).forEach(([rarity, count]) => {
+        console.log(`  - ${rarity}: ${count} items`);
+    });
+
     const modsByCategory: Record<string, number> = {};
     allItems.filter(i => i.type === 'Mods').forEach(mod => {
         const cat = mod.modCategory || 'Unknown';
         modsByCategory[cat] = (modsByCategory[cat] || 0) + 1;
     });
 
-    console.log('\n🔧 Mods par catégorie:');
-    Object.entries(modsByCategory).forEach(([cat, count]) => {
-        console.log(`  - ${cat}: ${count} mods`);
-    });
+    if (Object.keys(modsByCategory).length > 0) {
+        console.log('\n🔧 Mods par catégorie:');
+        Object.entries(modsByCategory).forEach(([cat, count]) => {
+            console.log(`  - ${cat}: ${count} mods`);
+        });
+    }
 })();
