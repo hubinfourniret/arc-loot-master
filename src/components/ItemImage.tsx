@@ -4,12 +4,13 @@ import { Package } from 'lucide-react';
 interface ItemImageProps {
   src?: string;
   alt: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   rarity?: 'Common' |'Uncommon'| 'Rare' | 'Epic' | 'Legendary';
   className?: string;
 }
 
 const sizeClasses = {
+  xs: 'w-6 h-6',
   sm: 'w-10 h-10',
   md: 'w-14 h-14',
   lg: 'w-20 h-20',
