@@ -1,4 +1,4 @@
-// scrape-all-items-with-compatibility.ts
+// scrape-all-items-with-mod-categories.ts
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
@@ -8,12 +8,13 @@ interface ItemData {
     name: string;
     type: string;
     category: string;
+    modCategory?: string;  // ← NOUVEAU: Catégorie spécifique pour les mods
     rarity: string;
     weight: number;
     stackSize: number;
     value: number;
     canBeFoundIn: string[];
-    compatibleWith?: string[];  // ← Armes compatibles pour les mods
+    compatibleWith?: string[];
     imageUrl: string;
     pageUrl: string;
     description: string;
@@ -43,6 +44,19 @@ const rarityMap: Record<string, string> = {
     'Rare': 'Rare',
     'Epic': 'Epic',
     'Legendary': 'Legendary'
+};
+
+// ✅ NOUVEAU: Mapping des icônes vers les catégories de mods
+const modIconCategoryMap: Record<string, string> = {
+    'Mods_Muzzle.png': 'Muzzle',
+    'Mods_Shotgun-Muzzle.png': 'Shotgun Muzzle',
+    'Mods_Tech-Mod.png': 'Tech Mod',
+    'Mods_Light-Mag.png': 'Light Magazine',
+    'Mods_Medium-Mag.png': 'Medium Magazine',
+    'Mods_Shotgun-Mag.png': 'Shotgun Magazine',
+    'Mods_Underbarrel.png': 'Underbarrel',
+    'Mods_Stock.png': 'Stock',
+    'Mods_Barrel.png': 'Barrel',
 };
 
 const scrapeItemsList = async (page: puppeteer.Page) => {
@@ -98,11 +112,13 @@ const scrapeItemPage = async (page: puppeteer.Page, item: any): Promise<ItemData
             value: 0,
             canBeFoundIn: [],
             compatibleWith: [],
+            modCategory: null,
+            modIconUrl: null,
             imageUrl: '',
             description: ''
         };
 
-        // 1. Image
+        // 1. Image principale (premier tr avec class infobox-image)
         const imageRow = infobox.querySelector('tr.infobox-image');
         if (imageRow) {
             const img = imageRow.querySelector('picture img') as HTMLImageElement;
@@ -119,25 +135,33 @@ const scrapeItemPage = async (page: puppeteer.Page, item: any): Promise<ItemData
             }
         }
 
-        // 2. Rarity
-        const rarityRow = infobox.querySelector('tr.data-tag');
+        // 2. ✅ NOUVEAU: Détecter l'icône de catégorie de mod dans tr.data-tag.icon
+        const iconRow = infobox.querySelector('tr.data-tag.icon');
+        if (iconRow) {
+            const iconImg = iconRow.querySelector('picture img') as HTMLImageElement;
+            if (iconImg) {
+                const iconSrc = iconImg.getAttribute('src') || '';
+                result.modIconUrl = iconSrc;
+            }
+        }
+
+        // 3. Rarity (chercher tr avec class data-tag mais pas icon)
+        const rarityRow = infobox.querySelector('tr.data-tag:not(.icon)');
         if (rarityRow) {
             const rarityText = rarityRow.textContent?.trim() || 'Common';
             result.rarity = rarityText;
         }
 
-        // 3. Parcourir toutes les lignes
+        // 4. Parcourir toutes les lignes
         const dataRows = infobox.querySelectorAll('tr');
 
         dataRows.forEach((row) => {
-            // ✅ NOUVEAU: Récupérer la compatibilité depuis tr.data-warning
+            // Récupérer la compatibilité depuis tr.data-warning
             if (row.classList.contains('data-warning')) {
                 const td = row.querySelector('td');
                 if (td) {
                     const text = td.textContent || '';
-                    // Vérifier si c'est la ligne de compatibilité
                     if (text.includes('Compatible with:')) {
-                        // Extraire tous les liens d'armes
                         const weaponLinks = Array.from(td.querySelectorAll('a'));
                         const weapons = weaponLinks.map(link => {
                             return link.getAttribute('title') || link.textContent?.trim() || '';
@@ -205,11 +229,27 @@ const scrapeItemPage = async (page: puppeteer.Page, item: any): Promise<ItemData
     const itemType = categoryTypeMap[item.category] || 'Consumables';
     const rarity = rarityMap[data.rarity] || 'Common';
 
+    // ✅ NOUVEAU: Détecter la catégorie du mod depuis l'icône
+    let modCategory: string | undefined = undefined;
+    if (itemType === 'Mods' && data.modIconUrl) {
+        // Extraire le nom du fichier de l'URL
+        const iconFileName = data.modIconUrl.split('/').pop()?.split('?')[0] || '';
+
+        // Chercher dans le mapping
+        for (const [key, value] of Object.entries(modIconCategoryMap)) {
+            if (iconFileName.includes(key.replace('.png', ''))) {
+                modCategory = value;
+                break;
+            }
+        }
+    }
+
     return {
         id: itemId,
         name: item.name,
         type: itemType,
         category: item.category,
+        modCategory,
         rarity,
         weight: data.weight,
         stackSize: data.stackSize,
@@ -256,12 +296,18 @@ const generateTypeScript = (items: ItemData[]): string => {
             output += `    id: "${item.id}",\n`;
             output += `    name: "${item.name.replace(/"/g, '\\"')}",\n`;
             output += `    type: "${item.type}",\n`;
+
+            // ✅ Ajouter modCategory si présent
+            if (item.modCategory) {
+                output += `    modCategory: "${item.modCategory}",\n`;
+            }
+
             output += `    rarity: "${item.rarity}",\n`;
             output += `    value: ${item.value},\n`;
             output += `    weight: ${item.weight},\n`;
             output += `    stackSize: ${item.stackSize},\n`;
 
-            // ✅ Ajouter compatibleWith si présent (pour les mods)
+            // Ajouter compatibleWith si présent (pour les mods)
             if (item.compatibleWith && item.compatibleWith.length > 0) {
                 const compatList = item.compatibleWith.map(w => `"${w}"`).join(', ');
                 output += `    compatibleWith: [${compatList}],\n`;
@@ -302,6 +348,10 @@ const generateTypeScript = (items: ItemData[]): string => {
 
             let logMessage = `  ✅ ${fullData.rarity} | ${fullData.weight}kg | ${fullData.value}¢`;
 
+            if (fullData.modCategory) {
+                logMessage += ` | Catégorie: ${fullData.modCategory}`;
+            }
+
             if (fullData.compatibleWith && fullData.compatibleWith.length > 0) {
                 logMessage += ` | Compatible: ${fullData.compatibleWith.length} armes`;
             }
@@ -333,7 +383,15 @@ const generateTypeScript = (items: ItemData[]): string => {
         console.log(`  - ${type}: ${count} items`);
     });
 
-    // Compter les mods avec compatibilité
-    const modsWithCompat = allItems.filter(i => i.type === 'Mods' && i.compatibleWith && i.compatibleWith.length > 0);
-    console.log(`\n🔧 Mods avec compatibilité: ${modsWithCompat.length}`);
+    // Statistiques sur les mods
+    const modsByCategory: Record<string, number> = {};
+    allItems.filter(i => i.type === 'Mods').forEach(mod => {
+        const cat = mod.modCategory || 'Unknown';
+        modsByCategory[cat] = (modsByCategory[cat] || 0) + 1;
+    });
+
+    console.log('\n🔧 Mods par catégorie:');
+    Object.entries(modsByCategory).forEach(([cat, count]) => {
+        console.log(`  - ${cat}: ${count} mods`);
+    });
 })();

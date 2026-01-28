@@ -2,7 +2,7 @@
 // ITEMS DATA - Scrapé depuis ARC Raiders Wiki
 // ============================================================================
 
-// CONSUMABLES (54 items)
+// CONSUMABLES (55 items)
 export const consumables: BaseItem[] = [
   {
     id: "item_acoustic_guitar",
@@ -244,6 +244,17 @@ export const consumables: BaseItem[] = [
     weight: 0.5,
     stackSize: 1,
     imageUrl: "https://arcraiders.wiki/w/images/thumb/7/74/Binoculars.png/348px-Binoculars.png.webp",
+    description: "A community-run wiki supported by Embark Studios"
+  },
+  {
+    id: "item_integrated_defibrillator",
+    name: "Integrated Defibrillator",
+    type: "Consumables",
+    rarity: "Common",
+    value: 0,
+    weight: 0,
+    stackSize: 3,
+    imageUrl: "https://arcraiders.wiki/w/images/thumb/5/5f/Defibrillator.png/348px-Defibrillator.png.webp",
     description: "A community-run wiki supported by Embark Studios"
   },
   {
@@ -2441,7 +2452,7 @@ export const crafting_materials: BaseItem[] = [
   }
 ];
 
-// GEAR (71 items)
+// GEAR (79 items)
 export const gear: BaseItem[] = [
   {
     id: "item_air_freshener",
@@ -2453,6 +2464,17 @@ export const gear: BaseItem[] = [
     stackSize: 5,
     imageUrl: "https://arcraiders.wiki/w/images/thumb/0/03/Air_Freshener.png/348px-Air_Freshener.png.webp",
     description: "Air Freshener is a Trinket that's sure to attract a few noses."
+  },
+  {
+    id: "item_alien_duck",
+    name: "Alien Duck",
+    type: "Gear",
+    rarity: "Common",
+    value: 1000,
+    weight: 0.3,
+    stackSize: 15,
+    imageUrl: "https://arcraiders.wiki/w/images/3/3e/Alien_Duck.png",
+    description: "Alien Duck is an Uncommon Trinket."
   },
   {
     id: "item_ancient_fort_security_code",
@@ -2719,6 +2741,17 @@ export const gear: BaseItem[] = [
     description: "The Dart Board is a trinket that your Raider hasn't quite figured out how to \"repurpose\" from the bar in Speranza."
   },
   {
+    id: "item_doodly_duck",
+    name: "Doodly Duck",
+    type: "Gear",
+    rarity: "Common",
+    value: 3000,
+    weight: 0.3,
+    stackSize: 15,
+    imageUrl: "https://arcraiders.wiki/w/images/9/91/Doodly_Duck.png",
+    description: "Tropical Duck is a Rare Trinket."
+  },
+  {
     id: "item_empty_wine_bottle",
     name: "Empty Wine Bottle",
     type: "Gear",
@@ -2752,6 +2785,17 @@ export const gear: BaseItem[] = [
     description: "The Faded Photograph contains an image lost to the sands of time and literal sand. I mean really, who leaves a picture with no glass covering it out i"
   },
   {
+    id: "item_familiar_duck",
+    name: "Familiar Duck",
+    type: "Gear",
+    rarity: "Common",
+    value: 7000,
+    weight: 0.3,
+    stackSize: 15,
+    imageUrl: "https://arcraiders.wiki/w/images/4/4f/Familiar_Duck.png",
+    description: "Familiar Duck is a Epic Trinket."
+  },
+  {
     id: "item_film_reel",
     name: "Film Reel",
     type: "Gear",
@@ -2774,6 +2818,17 @@ export const gear: BaseItem[] = [
     description: "The Fine Wristwatch is from a more civilized era."
   },
   {
+    id: "item_flashy_duck",
+    name: "Flashy Duck",
+    type: "Gear",
+    rarity: "Common",
+    value: 3000,
+    weight: 0.3,
+    stackSize: 15,
+    imageUrl: "https://arcraiders.wiki/w/images/f/f1/Flashy_Duck.png",
+    description: "Flashy Duck is a Rare Trinket."
+  },
+  {
     id: "item_free_loadout_augment",
     name: "Free Loadout Augment",
     type: "Gear",
@@ -2783,6 +2838,17 @@ export const gear: BaseItem[] = [
     stackSize: 1,
     imageUrl: "https://arcraiders.wiki/w/images/thumb/c/cf/Free_Loadout_Augment.png/348px-Free_Loadout_Augment.png.webp",
     description: "Free Loadout Augment is a basic Augment that Raiders receive when choosing to deploy with a Free Loadout."
+  },
+  {
+    id: "item_gentle_duck",
+    name: "Gentle Duck",
+    type: "Gear",
+    rarity: "Common",
+    value: 1000,
+    weight: 0.3,
+    stackSize: 15,
+    imageUrl: "https://arcraiders.wiki/w/images/c/c4/Gentle_Duck.png",
+    description: "Gentle Duck is an Uncommon Trinket."
   },
   {
     id: "item_heavy_shield",
@@ -2859,6 +2925,17 @@ export const gear: BaseItem[] = [
     weight: 3,
     stackSize: 1,
     imageUrl: "https://arcraiders.wiki/w/images/thumb/6/68/Looting_Mk._3_%28Cautious%29.png/348px-Looting_Mk._3_%28Cautious%29.png.webp",
+    description: "Includes built-in augmented Binoculars"
+  },
+  {
+    id: "item_looting_mk_3_safekeeper",
+    name: "Looting Mk. 3 (Safekeeper)",
+    type: "Gear",
+    rarity: "Common",
+    value: 5000,
+    weight: 5,
+    stackSize: 1,
+    imageUrl: "https://arcraiders.wiki/w/images/thumb/c/c6/Looting_Mk._3_%28Safekeeper%29.png/348px-Looting_Mk._3_%28Safekeeper%29.png.webp",
     description: "A community-run wiki supported by Embark Studios"
   },
   {
@@ -3035,7 +3112,7 @@ export const gear: BaseItem[] = [
     weight: 0.3,
     stackSize: 15,
     imageUrl: "https://arcraiders.wiki/w/images/thumb/d/df/Rubber_Duck.png/348px-Rubber_Duck.png.webp",
-    description: "MY PRECIOUS RUBBER DUCK, DON'T TOUCH MY PRECIOUS"
+    description: "Rubber Duck is a Common Trinket"
   },
   {
     id: "item_silver_teaspoon_set",
@@ -3192,6 +3269,17 @@ export const gear: BaseItem[] = [
     description: "A community-run wiki supported by Embark Studios"
   },
   {
+    id: "item_tactical_mk_3_revival",
+    name: "Tactical Mk. 3 (Revival)",
+    type: "Gear",
+    rarity: "Common",
+    value: 5000,
+    weight: 3,
+    stackSize: 1,
+    imageUrl: "https://arcraiders.wiki/w/images/thumb/e/e0/Tactical_Mk._3_%28Revival%29.png/348px-Tactical_Mk._3_%28Revival%29.png.webp",
+    description: "A community-run wiki supported by Embark Studios"
+  },
+  {
     id: "item_torn_book",
     name: "Torn Book",
     type: "Gear",
@@ -3201,6 +3289,17 @@ export const gear: BaseItem[] = [
     stackSize: 5,
     imageUrl: "https://arcraiders.wiki/w/images/thumb/c/cc/Torn_Book.png/348px-Torn_Book.png.webp",
     description: "Whoever did this is a monster, how do they expect me to read a Torn Book?"
+  },
+  {
+    id: "item_tropical_duck",
+    name: "Tropical Duck",
+    type: "Gear",
+    rarity: "Common",
+    value: 1000,
+    weight: 0.3,
+    stackSize: 15,
+    imageUrl: "https://arcraiders.wiki/w/images/c/cc/Tropical_Duck.png",
+    description: "Tropical Duck is an Uncommon Trinket."
   },
   {
     id: "item_vase",
@@ -3302,6 +3401,7 @@ export const mods: BaseItem[] = [
     id: "item_angled_grip_i",
     name: "Angled Grip I",
     type: "Mods",
+    modCategory: "Underbarrel",
     rarity: "Common",
     value: 640,
     weight: 0.25,
@@ -3314,6 +3414,7 @@ export const mods: BaseItem[] = [
     id: "item_angled_grip_ii",
     name: "Angled Grip II",
     type: "Mods",
+    modCategory: "Underbarrel",
     rarity: "Common",
     value: 2000,
     weight: 0.5,
@@ -3326,6 +3427,7 @@ export const mods: BaseItem[] = [
     id: "item_angled_grip_iii",
     name: "Angled Grip III",
     type: "Mods",
+    modCategory: "Underbarrel",
     rarity: "Common",
     value: 5000,
     weight: 0.75,
@@ -3338,6 +3440,7 @@ export const mods: BaseItem[] = [
     id: "item_anvil_splitter",
     name: "Anvil Splitter",
     type: "Mods",
+    modCategory: "Tech Mod",
     rarity: "Common",
     value: 7000,
     weight: 0.5,
@@ -3350,6 +3453,7 @@ export const mods: BaseItem[] = [
     id: "item_compensator_i",
     name: "Compensator I",
     type: "Mods",
+    modCategory: "Muzzle",
     rarity: "Common",
     value: 640,
     weight: 0.25,
@@ -3362,6 +3466,7 @@ export const mods: BaseItem[] = [
     id: "item_compensator_ii",
     name: "Compensator II",
     type: "Mods",
+    modCategory: "Muzzle",
     rarity: "Common",
     value: 2000,
     weight: 0.5,
@@ -3374,6 +3479,7 @@ export const mods: BaseItem[] = [
     id: "item_compensator_iii",
     name: "Compensator III",
     type: "Mods",
+    modCategory: "Muzzle",
     rarity: "Common",
     value: 5000,
     weight: 0.75,
@@ -3386,6 +3492,7 @@ export const mods: BaseItem[] = [
     id: "item_extended_barrel",
     name: "Extended Barrel",
     type: "Mods",
+    modCategory: "Muzzle",
     rarity: "Common",
     value: 5000,
     weight: 0.5,
@@ -3398,6 +3505,7 @@ export const mods: BaseItem[] = [
     id: "item_extended_light_mag_i",
     name: "Extended Light Mag I",
     type: "Mods",
+    modCategory: "Light Magazine",
     rarity: "Common",
     value: 640,
     weight: 0.5,
@@ -3410,6 +3518,7 @@ export const mods: BaseItem[] = [
     id: "item_extended_light_mag_ii",
     name: "Extended Light Mag II",
     type: "Mods",
+    modCategory: "Light Magazine",
     rarity: "Common",
     value: 2000,
     weight: 0.5,
@@ -3422,6 +3531,7 @@ export const mods: BaseItem[] = [
     id: "item_extended_light_mag_iii",
     name: "Extended Light Mag III",
     type: "Mods",
+    modCategory: "Light Magazine",
     rarity: "Common",
     value: 5000,
     weight: 0.75,
@@ -3434,6 +3544,7 @@ export const mods: BaseItem[] = [
     id: "item_extended_medium_mag_i",
     name: "Extended Medium Mag I",
     type: "Mods",
+    modCategory: "Medium Magazine",
     rarity: "Common",
     value: 640,
     weight: 0.25,
@@ -3446,6 +3557,7 @@ export const mods: BaseItem[] = [
     id: "item_extended_medium_mag_ii",
     name: "Extended Medium Mag II",
     type: "Mods",
+    modCategory: "Medium Magazine",
     rarity: "Common",
     value: 2000,
     weight: 0.5,
@@ -3458,6 +3570,7 @@ export const mods: BaseItem[] = [
     id: "item_extended_medium_mag_iii",
     name: "Extended Medium Mag III",
     type: "Mods",
+    modCategory: "Medium Magazine",
     rarity: "Common",
     value: 5000,
     weight: 0.75,
@@ -3470,6 +3583,7 @@ export const mods: BaseItem[] = [
     id: "item_extended_shotgun_mag_i",
     name: "Extended Shotgun Mag I",
     type: "Mods",
+    modCategory: "Shotgun Magazine",
     rarity: "Common",
     value: 640,
     weight: 0.25,
@@ -3482,6 +3596,7 @@ export const mods: BaseItem[] = [
     id: "item_extended_shotgun_mag_ii",
     name: "Extended Shotgun Mag II",
     type: "Mods",
+    modCategory: "Shotgun Magazine",
     rarity: "Common",
     value: 2000,
     weight: 0.5,
@@ -3494,6 +3609,7 @@ export const mods: BaseItem[] = [
     id: "item_extended_shotgun_mag_iii",
     name: "Extended Shotgun Mag III",
     type: "Mods",
+    modCategory: "Shotgun Magazine",
     rarity: "Common",
     value: 5000,
     weight: 0.75,
@@ -3506,6 +3622,7 @@ export const mods: BaseItem[] = [
     id: "item_horizontal_grip",
     name: "Horizontal Grip",
     type: "Mods",
+    modCategory: "Underbarrel",
     rarity: "Common",
     value: 7000,
     weight: 0.5,
@@ -3518,6 +3635,7 @@ export const mods: BaseItem[] = [
     id: "item_kinetic_converter",
     name: "Kinetic Converter",
     type: "Mods",
+    modCategory: "Stock",
     rarity: "Common",
     value: 7000,
     weight: 0.75,
@@ -3530,6 +3648,7 @@ export const mods: BaseItem[] = [
     id: "item_lightweight_stock",
     name: "Lightweight Stock",
     type: "Mods",
+    modCategory: "Stock",
     rarity: "Common",
     value: 5000,
     weight: 0.25,
@@ -3542,6 +3661,7 @@ export const mods: BaseItem[] = [
     id: "item_muzzle_brake_i",
     name: "Muzzle Brake I",
     type: "Mods",
+    modCategory: "Muzzle",
     rarity: "Common",
     value: 640,
     weight: 0.25,
@@ -3554,6 +3674,7 @@ export const mods: BaseItem[] = [
     id: "item_muzzle_brake_ii",
     name: "Muzzle Brake II",
     type: "Mods",
+    modCategory: "Muzzle",
     rarity: "Common",
     value: 2000,
     weight: 0.5,
@@ -3566,6 +3687,7 @@ export const mods: BaseItem[] = [
     id: "item_muzzle_brake_iii",
     name: "Muzzle Brake III",
     type: "Mods",
+    modCategory: "Muzzle",
     rarity: "Common",
     value: 5000,
     weight: 0.5,
@@ -3578,6 +3700,7 @@ export const mods: BaseItem[] = [
     id: "item_padded_stock",
     name: "Padded Stock",
     type: "Mods",
+    modCategory: "Stock",
     rarity: "Common",
     value: 5000,
     weight: 0.5,
@@ -3590,6 +3713,7 @@ export const mods: BaseItem[] = [
     id: "item_shotgun_choke_i",
     name: "Shotgun Choke I",
     type: "Mods",
+    modCategory: "Shotgun Muzzle",
     rarity: "Common",
     value: 640,
     weight: 0.25,
@@ -3602,6 +3726,7 @@ export const mods: BaseItem[] = [
     id: "item_shotgun_choke_ii",
     name: "Shotgun Choke II",
     type: "Mods",
+    modCategory: "Shotgun Muzzle",
     rarity: "Common",
     value: 2000,
     weight: 0.5,
@@ -3614,6 +3739,7 @@ export const mods: BaseItem[] = [
     id: "item_shotgun_choke_iii",
     name: "Shotgun Choke III",
     type: "Mods",
+    modCategory: "Shotgun Muzzle",
     rarity: "Common",
     value: 5000,
     weight: 0.75,
@@ -3626,6 +3752,7 @@ export const mods: BaseItem[] = [
     id: "item_shotgun_silencer",
     name: "Shotgun Silencer",
     type: "Mods",
+    modCategory: "Shotgun Muzzle",
     rarity: "Common",
     value: 5000,
     weight: 0.5,
@@ -3638,6 +3765,7 @@ export const mods: BaseItem[] = [
     id: "item_silencer_i",
     name: "Silencer I",
     type: "Mods",
+    modCategory: "Muzzle",
     rarity: "Common",
     value: 2000,
     weight: 0.25,
@@ -3650,6 +3778,7 @@ export const mods: BaseItem[] = [
     id: "item_silencer_ii",
     name: "Silencer II",
     type: "Mods",
+    modCategory: "Muzzle",
     rarity: "Common",
     value: 5000,
     weight: 0.5,
@@ -3662,6 +3791,7 @@ export const mods: BaseItem[] = [
     id: "item_silencer_iii",
     name: "Silencer III",
     type: "Mods",
+    modCategory: "Muzzle",
     rarity: "Common",
     value: 7000,
     weight: 0.75,
@@ -3674,6 +3804,7 @@ export const mods: BaseItem[] = [
     id: "item_stable_stock_i",
     name: "Stable Stock I",
     type: "Mods",
+    modCategory: "Stock",
     rarity: "Common",
     value: 640,
     weight: 0.25,
@@ -3686,6 +3817,7 @@ export const mods: BaseItem[] = [
     id: "item_stable_stock_ii",
     name: "Stable Stock II",
     type: "Mods",
+    modCategory: "Stock",
     rarity: "Common",
     value: 2000,
     weight: 0.5,
@@ -3698,6 +3830,7 @@ export const mods: BaseItem[] = [
     id: "item_stable_stock_iii",
     name: "Stable Stock III",
     type: "Mods",
+    modCategory: "Stock",
     rarity: "Common",
     value: 5000,
     weight: 0.75,
@@ -3710,6 +3843,7 @@ export const mods: BaseItem[] = [
     id: "item_vertical_grip_i",
     name: "Vertical Grip I",
     type: "Mods",
+    modCategory: "Underbarrel",
     rarity: "Common",
     value: 640,
     weight: 0.25,
@@ -3722,6 +3856,7 @@ export const mods: BaseItem[] = [
     id: "item_vertical_grip_ii",
     name: "Vertical Grip II",
     type: "Mods",
+    modCategory: "Underbarrel",
     rarity: "Common",
     value: 2000,
     weight: 0.5,
@@ -3734,6 +3869,7 @@ export const mods: BaseItem[] = [
     id: "item_vertical_grip_iii",
     name: "Vertical Grip III",
     type: "Mods",
+    modCategory: "Underbarrel",
     rarity: "Common",
     value: 5000,
     weight: 0.75,

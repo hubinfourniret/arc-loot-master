@@ -37,8 +37,9 @@ export function WeaponModSelector({
 
   const availableMods = useMemo(() => {
     const attachedIds = new Set(attachedMods.map(am => am.modId));
+    const attachedCategory = new Set(attachedMods.map(am => am.mod.modCategory));
     return compatibleMods.filter(mod => {
-      if (attachedIds.has(mod.id)) return false;
+      if (attachedIds.has(mod.id) || attachedCategory.has(mod.modCategory)) return false;
       if (!searchTerm) return true;
       return mod.name.toLowerCase().includes(searchTerm.toLowerCase());
     });
@@ -101,7 +102,7 @@ export function WeaponModSelector({
             className="h-7 text-xs gap-1"
           >
             <Wrench className="w-3 h-3" />
-            Add Mod ({compatibleMods.length - attachedMods.length} available)
+            Add Mod ({availableMods.length} available)
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-md">
