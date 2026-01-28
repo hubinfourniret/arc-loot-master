@@ -3,10 +3,11 @@ import { Trash2, Save, Upload, Copy, ChevronUp, ChevronDown, Package, Scale, Coi
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useStash, StashBackup, getEffectiveValue } from '@/hooks/useStash';
+import { useStash, StashBackup, getEffectiveValue, getEffectiveWeight } from '@/hooks/useStash';
 import { WeaponLevel } from '@/data/items';
 import { ItemImage } from '@/components/ItemImage';
 import { ItemSearchCombobox } from '@/components/ItemSearchCombobox';
+import { WeaponModSelector } from '@/components/WeaponModSelector';
 import { toast } from 'sonner';
 
 type SortKey = 'name' | 'quantity' | 'value' | 'weight' | 'ratio';
@@ -18,6 +19,8 @@ export function StashCalculator() {
     addItem,
     updateQuantity,
     removeItem,
+    addModToWeapon,
+    removeModFromWeapon,
     clearAll,
     saveBackup,
     getBackups,
@@ -251,12 +254,14 @@ export function StashCalculator() {
                     ) : (
                       sortedStashItems.map((stash) => {
                         const effectiveValue = getEffectiveValue(stash);
+                        const effectiveWeight = getEffectiveWeight(stash);
                         const stashKey = stash.item.type === 'Weapons' 
                           ? `${stash.itemId}-lvl${stash.weaponLevel}` 
                           : stash.itemId;
+                        const isWeapon = stash.item.type === 'Weapons';
                         
                         return (
-                          <tr key={stashKey} className="border-t border-border hover:bg-muted/30 transition-colors">
+                          <tr key={stashKey} className="border-t border-border hover:bg-muted/30 transition-colors align-top">
                             <td className="p-3">
                               <ItemImage 
                                 src={stash.item.imageUrl} 
@@ -266,18 +271,29 @@ export function StashCalculator() {
                               />
                             </td>
                             <td className="p-3">
-                              <div className="flex items-center gap-2">
-                                <span className={`text-xs px-1.5 py-0.5 rounded border ${
-                                  stash.item.rarity === 'Legendary' ? 'rarity-legendary' :
-                                  stash.item.rarity === 'Rare' ? 'rarity-rare' : 'rarity-common'
-                                }`}>
-                                  {stash.item.rarity.charAt(0)}
-                                </span>
-                                <span className="text-foreground font-medium">{stash.item.name}</span>
-                                {stash.weaponLevel && (
-                                  <span className="text-xs px-1.5 py-0.5 rounded bg-accent text-accent-foreground">
-                                    Lvl {stash.weaponLevel}
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className={`text-xs px-1.5 py-0.5 rounded border ${
+                                    stash.item.rarity === 'Legendary' ? 'rarity-legendary' :
+                                    stash.item.rarity === 'Rare' ? 'rarity-rare' : 'rarity-common'
+                                  }`}>
+                                    {stash.item.rarity.charAt(0)}
                                   </span>
+                                  <span className="text-foreground font-medium">{stash.item.name}</span>
+                                  {stash.weaponLevel && (
+                                    <span className="text-xs px-1.5 py-0.5 rounded bg-accent text-accent-foreground">
+                                      Lvl {stash.weaponLevel}
+                                    </span>
+                                  )}
+                                </div>
+                                {/* Weapon Mods Section */}
+                                {isWeapon && stash.weaponLevel && (
+                                  <WeaponModSelector
+                                    weaponName={stash.item.name}
+                                    attachedMods={stash.attachedMods || []}
+                                    onAddMod={(modId) => addModToWeapon(stash.itemId, stash.weaponLevel!, modId)}
+                                    onRemoveMod={(modId) => removeModFromWeapon(stash.itemId, stash.weaponLevel!, modId)}
+                                  />
                                 )}
                               </div>
                             </td>
@@ -297,10 +313,10 @@ export function StashCalculator() {
                               {(effectiveValue * stash.quantity).toLocaleString()}
                             </td>
                             <td className="p-3 text-right text-muted-foreground font-mono hidden sm:table-cell">
-                              {(stash.item.weight * stash.quantity).toFixed(1)}kg
+                              {(effectiveWeight * stash.quantity).toFixed(1)}kg
                             </td>
                             <td className="p-3 text-right text-success font-mono hidden md:table-cell">
-                              {(effectiveValue / stash.item.weight).toFixed(1)}
+                              {(effectiveValue / effectiveWeight).toFixed(1)}
                             </td>
                             <td className="p-3 text-center">
                               <Button

@@ -144,7 +144,7 @@ export function LoadoutOptimizer() {
                                 }`}>
                                   {item.rarity.charAt(0)}
                                 </span>
-                                {item.name} - {item.value}c / {item.weight}kg
+                                {item.name} - {Array.isArray(item.value) ? item.value[0] : item.value}c / {item.weight}kg
                               </span>
                             </SelectItem>
                           ))}
@@ -153,7 +153,7 @@ export function LoadoutOptimizer() {
                       
                       {slot.item && (
                         <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                          <span>💰 {slot.item.value.toLocaleString()} coins</span>
+                          <span>💰 {(Array.isArray(slot.item.value) ? slot.item.value[0] : slot.item.value).toLocaleString()} coins</span>
                           <span>⚖️ {slot.item.weight}kg</span>
                           {slot.item.dps && <span>🎯 {slot.item.dps} DPS</span>}
                           <span className={`px-1.5 py-0.5 rounded ${
@@ -265,7 +265,7 @@ export function LoadoutOptimizer() {
                     <div className="text-sm text-muted-foreground mb-1">Best Value/Weight</div>
                     <div className="text-foreground font-bold">{bestRatioItem.name}</div>
                     <div className="text-xs text-success font-mono">
-                      {(bestRatioItem.value / bestRatioItem.weight).toFixed(1)} coins/kg
+                      {((Array.isArray(bestRatioItem.value) ? bestRatioItem.value[0] : bestRatioItem.value) / bestRatioItem.weight).toFixed(1)} coins/kg
                     </div>
                   </div>
                 )}
