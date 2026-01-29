@@ -1,10 +1,9 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { allItems, BaseItem, WeaponLevel } from '@/data/items';
 import { ItemImage } from '@/components/ItemImage';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +21,8 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
   const [weaponLevels, setWeaponLevels] = useState<Record<string, WeaponLevel>>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const filteredItems = useMemo(() => {
     if (!searchTerm.trim()) return allItems.slice(0, 50);
@@ -33,6 +34,21 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
       item.rarity.toLowerCase().includes(term)
     ).slice(0, 50);
   }, [searchTerm]);
+
+  // Reset itemRefs when filtered items change
+  useEffect(() => {
+    itemRefs.current = itemRefs.current.slice(0, filteredItems.length);
+  }, [filteredItems.length]);
+
+  // Auto-scroll to keep selected item visible
+  useEffect(() => {
+    if (isOpen && itemRefs.current[selectedIndex]) {
+      itemRefs.current[selectedIndex]?.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+      });
+    }
+  }, [selectedIndex, isOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -142,9 +158,11 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
       {isOpen && (
         <div 
           className="absolute z-50 w-full mt-2 bg-popover border border-border rounded-lg shadow-xl overflow-hidden"
-          onWheel={(e) => e.stopPropagation()}
         >
-          <ScrollArea className="max-h-[400px]" onWheel={(e) => e.stopPropagation()}>
+          <div 
+            ref={listRef}
+            className="max-h-[400px] overflow-y-auto overscroll-contain"
+          >
             {filteredItems.length === 0 ? (
               <div className="p-6 text-center text-muted-foreground">
                 <p>No items found for "{searchTerm}"</p>
@@ -158,6 +176,7 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
                   
                   return (
                     <div
+                      ref={(el) => { itemRefs.current[index] = el; }}
                       key={item.id}
                       className={cn(
                         "flex items-center gap-3 p-2 rounded-lg border transition-all cursor-pointer",
@@ -257,7 +276,7 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
                 })}
               </div>
             )}
-          </ScrollArea>
+          </div>
 
           {/* Keyboard hints */}
           <div className="border-t border-border px-3 py-2 bg-muted/50 flex items-center gap-4 text-xs text-muted-foreground">
