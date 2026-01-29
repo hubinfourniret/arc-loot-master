@@ -140,8 +140,11 @@ export function ItemSearchCombobox({ onAddItem }: ItemSearchComboboxProps) {
 
       {/* Dropdown Results */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-popover border border-border rounded-lg shadow-xl overflow-hidden">
-          <ScrollArea className="max-h-[400px]">
+        <div 
+          className="absolute z-50 w-full mt-2 bg-popover border border-border rounded-lg shadow-xl overflow-hidden"
+          onWheel={(e) => e.stopPropagation()}
+        >
+          <ScrollArea className="max-h-[400px]" onWheel={(e) => e.stopPropagation()}>
             {filteredItems.length === 0 ? (
               <div className="p-6 text-center text-muted-foreground">
                 <p>No items found for "{searchTerm}"</p>
